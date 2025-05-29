@@ -10,20 +10,30 @@ app.http('getExpertForm', {
         context.log('HTTP trigger function processed a request: getExpertForm.');
         try {
             await connectDB();
-            const forms = await ExpertForm.find().sort({ createdAt: -1 }).populate('handledBy', 'name');
-            return res.status(200).json({
-                message: "Lấy danh sách câu hỏi thành công",
-                data: forms
-            });
+            const forms = await ExpertForm.find()
+                .sort({ createdAt: -1 })
+                .populate('handledBy', 'name');
+            return {
+                status: 200,
+                jsonBody: {
+                    message: "Lấy danh sách câu hỏi thành công",
+                    data: forms
+                }
+            };
         } catch (error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: error.message
-            })
+            context.log.error("Error in getExpertForm:", error.message);
+            return {
+                status: 500,
+                jsonBody: {
+                    message: "Internal server error",
+                    error: error.message
+                }
+            };
         }
     }
 });
 
+// Xoá form chuyên gia theo ID
 app.http('deleteExpertForm', {
     methods: ['DELETE'],
     authLevel: 'anonymous',
@@ -40,7 +50,6 @@ app.http('deleteExpertForm', {
                     jsonBody: { message: 'Không tìm thấy câu hỏi để xóa' }
                 };
             }
-
             return {
                 status: 200,
                 jsonBody: {
@@ -61,6 +70,7 @@ app.http('deleteExpertForm', {
     }
 });
 
+// Phản hồi form chuyên gia và gửi email
 app.http('replyExpertForm', {
     methods: ['POST'],
     authLevel: 'anonymous',
@@ -71,12 +81,14 @@ app.http('replyExpertForm', {
             await connectDB();
             const formId = request.params.id;
             const { message } = await request.json();
+
             if (!message) {
                 return {
                     status: 400,
-                    jsonBody: { message: 'Vui lòng nhập đầy đủ phản hồi và ID người trả lời.' }
+                    jsonBody: { message: 'Vui lòng nhập phản hồi.' }
                 };
             }
+
             const form = await ExpertForm.findById(formId);
             if (!form) {
                 return {
@@ -84,11 +96,14 @@ app.http('replyExpertForm', {
                     jsonBody: { message: 'Không tìm thấy câu hỏi' }
                 };
             }
+
             form.replies.push({ message });
             form.isHandled = true;
             form.handledAt = new Date();
             await form.save();
+
             await sendExpertReplyMail(form.email, form.name, form.question, message);
+
             return {
                 status: 200,
                 jsonBody: { message: 'Đã phản hồi và gửi email thành công' }

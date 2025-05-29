@@ -15,55 +15,64 @@ app.http('LoginAccount', {
             const body = await request.json();
             const { username, password } = body;
             if (!username || !password) {
-                return res
-                    .status(400)
-                    .json({ message: "Please enter complete information !" });
+                return {
+                    status: 400,
+                    jsonBody: { message: "Please enter complete information !" }
+                };
             }
             const user = await Users.findOne({ username });
             if (!user) {
-                return res.status(404).json({
-                    message: "Account not created !!",
-                });
+                return {
+                    status: 404,
+                    jsonBody: { message: "Account not created !!" }
+                };
             }
-            console.log("User found:", user);
             const isPasswordMatch = await bcrypt.compare(password, user.password);
             if (!isPasswordMatch) {
-                return res
-                    .status(401)
-                    .json({ message: "Username or password is incorrect!!" });
+                return {
+                    status: 401,
+                    jsonBody: { message: "Username or password is incorrect!!" }
+                };
             }
-            return res.status(200).json({
-                message: "Login successfully",
-                user: {
-                    id: user._id,
-                    username: user.username,
-                    role: user.role
+            return {
+                status: 200,
+                jsonBody: {
+                    message: "Login successfully",
+                    user: {
+                        id: user._id,
+                        username: user.username,
+                        role: user.role
+                    }
                 }
-            });
+            };
         } catch (error) {
             console.error("Error during login:", error);
-            return res
-                .status(500)
-                .json({ message: "Error while logging in", error: error.message });
+            return {
+                status: 500,
+                jsonBody: { message: "Error while logging in", error: error.message }
+            };
         }
     }
 });
-
 
 app.http('LogoutAccount', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'auth/logout',
     handler: async (request, context) => {
-        context.log('HTTP trigger function processed a request: LoginAccount.');
+        context.log('HTTP trigger function processed a request: LogoutAccount.');
         try {
             await connectDB();
-            return res.status(200).json({ message: "Đăng xuất thành công" });
+            return {
+                status: 200,
+                jsonBody: { message: "Đăng xuất thành công" }
+            };
         } catch (error) {
             console.error("Lỗi khi đăng xuất:", error);
-            return res
-                .status(500)
-                .json({ message: "Lỗi trong quá trình đăng xuất", error: error.message });
+            return {
+                status: 500,
+                jsonBody: { message: "Lỗi trong quá trình đăng xuất", error: error.message }
+            };
         }
     }
 });
@@ -74,7 +83,6 @@ app.http('ForgotPassword', {
     route: 'auth/forgot-password',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: ForgotPassword.');
-
         try {
             await connectDB();
             const body = await request.json();
@@ -111,7 +119,6 @@ app.http('VerifyOTP', {
     route: 'auth/verify-otp',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: VerifyOTP.');
-
         try {
             await connectDB();
             const body = await request.json();
@@ -136,7 +143,6 @@ app.http('VerifyOTP', {
             if (!matchedUser) {
                 return { status: 400, jsonBody: { message: "OTP is incorrect or expired" } };
             }
-
             await Users.updateOne(
                 { _id: matchedUser._id },
                 { otp: null, otpExpiration: null }
@@ -158,7 +164,6 @@ app.http('ResetPassword', {
     route: 'auth/reset-password',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: ResetPassword.');
-
         try {
             await connectDB();
             const body = await request.json();
