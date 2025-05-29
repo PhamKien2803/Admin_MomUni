@@ -8,8 +8,7 @@ app.http('getNotifications', {
     handler: async (req, res) => {
         try {
             await connectDB();
-            const userId = req.query.userId;
-            const notifications = await Notification.find({ userId })
+            const notifications = await Notification.find()
                 .sort({ createdAt: -1 });
 
             return res.status(200).json(notifications);

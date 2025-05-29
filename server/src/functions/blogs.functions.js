@@ -1,7 +1,7 @@
 const { app } = require('@azure/functions');
 const slugify = require("slugify");
-const Blogs = require("../../model/blogs.model");
-const Analytics = require("../../model/analytics.model")
+const Blogs = require("../shared/model/blogs.model");
+const Analytics = require("../shared/model/analytics.model")
 const connectDB = require('../shared/mongoose');
 
 app.http('createBlog', {

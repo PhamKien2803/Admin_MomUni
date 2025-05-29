@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Button, IconButton, CircularProgress, Tooltip,
-    Chip, Switch, Avatar, Link as MuiLink, TablePagination, Dialog
+    Chip, Switch, Avatar, Link as MuiLink, TablePagination, Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import {
@@ -16,6 +19,7 @@ import axiosInstance from '../../helper/axiosInstance';
 import { format } from 'date-fns';
 import BlogForm from './BlogForm';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import axios from 'axios';
 
 const BlogManagementPage = () => {
     const theme = useTheme();
@@ -32,7 +36,7 @@ const BlogManagementPage = () => {
     const fetchBlogs = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/admin/blog');
+            const response = await axios.get('/admin/blog');
             setBlogs(response.data.blogs || []);
         } catch (error) {
             console.error('Failed to fetch blogs:', error);
@@ -71,7 +75,7 @@ const BlogManagementPage = () => {
     const handleDeleteBlog = async () => {
         if (!blogToDelete) return;
         try {
-            await axiosInstance.delete(`/admin/blog/delete/${blogToDelete._id}`);
+            await axios.delete(`/admin/blog/delete/${blogToDelete._id}`);
             toast.success(`Đã xóa bài viết: ${blogToDelete.title}`);
             handleCloseDeleteConfirm();
             fetchBlogs();
@@ -84,7 +88,7 @@ const BlogManagementPage = () => {
     const handleUpdateStatus = async (blogId, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
-            await axiosInstance.put(`/admin/blog/update-status/${blogId}?status=${newStatus}`);
+            await axios.put(`/admin/blog/update-status/${blogId}?status=${newStatus}`);
             toast.success(`Cập nhật trạng thái thành công.`);
             fetchBlogs();
         } catch (error) {

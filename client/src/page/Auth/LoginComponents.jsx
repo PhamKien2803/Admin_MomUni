@@ -18,9 +18,9 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import axiosInstance from "../../helper/axiosInstance";
-import { getUserFromToken } from "../../helper/authHelper";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 const newPalette = {
   primary: "#CA877E",
@@ -88,7 +88,7 @@ const LoginAdminPage = () => {
     setLoading(true);
 
     try {
-      const response = await axiosInstance.post("/auth/login", {
+      const response = await axios.post("/auth/login", {
         username,
         password,
       });

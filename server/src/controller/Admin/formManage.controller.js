@@ -42,13 +42,13 @@ exports.deleteExpertForm = async (req, res) => {
 exports.replyExpertForm = async (req, res) => {
     try {
         const { message } = req.body;
-        const repliedBy = req.account.id;
+        // const repliedBy = req.account.id;
         if (!message) return res.status(400).json({ message: 'Vui lòng nhập phản hồi' });
         const form = await ExpertForm.findById(req.params.rid);
         if (!form) return res.status(404).json({ message: 'Không tìm thấy câu hỏi' });
-        form.replies.push({ message, repliedBy });
+        form.replies.push({ message });//, repliedBy
         form.isHandled = true;
-        form.handledBy = repliedBy;
+        // form.handledBy = repliedBy;
         form.handledAt = new Date();
         await form.save();
         await sendExpertReplyMail(form.email, form.name, form.question, message);

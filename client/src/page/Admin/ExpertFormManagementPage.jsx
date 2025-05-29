@@ -40,6 +40,7 @@ import {
 import { toast } from 'react-toastify';
 import axiosInstance from '../../helper/axiosInstance';
 import { format } from 'date-fns';
+import axios from 'axios';
 
 const ExpertFormManagementPage = () => {
     const theme = useTheme()
@@ -88,7 +89,7 @@ const ExpertFormManagementPage = () => {
         }
         setReplyLoading(true);
         try {
-            await axiosInstance.post(`/expert-form/reply/${selectedForm._id}`, {
+            await axios.post(`/expert-form/reply/${selectedForm._id}`, {
                 message: replyMessage,
             });
             toast.success('Đã gửi phản hồi thành công!');
@@ -115,7 +116,7 @@ const ExpertFormManagementPage = () => {
     const handleDeleteForm = async () => {
         if (!formToDelete) return;
         try {
-            await axiosInstance.delete(`/expert-form/${formToDelete._id}`);
+            await axios.delete(`/expert-form/${formToDelete._id}`);
             toast.success(`Đã xóa yêu cầu từ ${formToDelete.name}.`);
             handleCloseDeleteConfirm();
             fetchForms();
@@ -142,10 +143,17 @@ const ExpertFormManagementPage = () => {
                     Quản lý Yêu cầu Tư vấn Chuyên gia
                 </Typography>
                 <Tooltip title="Tải lại danh sách">
-                    <IconButton onClick={fetchForms} color="primary" disabled={loading}>
-                        {loading ? <CircularProgress size={24} /> : <RefreshIcon />}
-                    </IconButton>
+                    <span>
+                        <IconButton
+                            onClick={fetchForms}
+                            color="primary"
+                            disabled={loading}
+                        >
+                            {loading ? <CircularProgress size={24} /> : <RefreshIcon />}
+                        </IconButton>
+                    </span>
                 </Tooltip>
+
             </Box>
 
             {loading && forms.length === 0 ? (

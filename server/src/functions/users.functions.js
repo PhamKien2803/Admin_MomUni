@@ -1,7 +1,6 @@
 const { app } = require('@azure/functions');
 const bcrypt = require('bcryptjs');
 const Users = require("../shared/model/users.model");
-const Account = require("../shared/model/Account");
 const connectDB = require('../shared/mongoose');
 
 
@@ -64,14 +63,14 @@ app.http('ForgotPassword', {
             if (!email) {
                 return { status: 400, jsonBody: { message: "Please enter email !!" } };
             }
-            const user = await Account.findOne({ email });
+            const user = await Users.findOne({ email });
             if (!user) {
                 return { status: 404, jsonBody: { message: "Email does not exist" } };
             }
             const otp = Math.floor(100000 + Math.random() * 900000);
             const hashedOtp = await bcrypt.hash(otp.toString(), 10);
             const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
-            await Account.updateOne(
+            await Users.updateOne(
                 { _id: user._id },
                 { otp: hashedOtp, otpExpiration }
             );
@@ -101,7 +100,7 @@ app.http('VerifyOTP', {
             if (!otp) {
                 return { status: 400, jsonBody: { message: "Please enter OTP" } };
             }
-            const users = await Account.find({ otp: { $ne: null } });
+            const users = await Users.find({ otp: { $ne: null } });
             if (!users || users.length === 0) {
                 return { status: 400, jsonBody: { message: "OTP is incorrect or expired" } };
             }
@@ -119,7 +118,7 @@ app.http('VerifyOTP', {
                 return { status: 400, jsonBody: { message: "OTP is incorrect or expired" } };
             }
 
-            await Account.updateOne(
+            await Users.updateOne(
                 { _id: matchedUser._id },
                 { otp: null, otpExpiration: null }
             );
@@ -160,7 +159,7 @@ app.http('ResetPassword', {
                     jsonBody: { message: "Confirmed password does not match" }
                 };
             }
-            const user = await Account.findOne({ email });
+            const user = await Users.findOne({ email });
             if (!user) {
                 return { status: 404, jsonBody: { message: "Account not found" } };
             }

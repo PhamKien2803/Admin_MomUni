@@ -3,8 +3,8 @@ const Notification = require("../../model/notification.model")
 // GET /api/notification
 exports.getNotifications = async (req, res) => {
     try {
-        const userId = req.account.id;
-        const notifications = await Notification.find({ userId })
+        // const userId = req.account.id;
+        const notifications = await Notification.find() //{ userId }
             .sort({ createdAt: -1 });
 
         return res.status(200).json(notifications);

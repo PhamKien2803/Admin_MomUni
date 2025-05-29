@@ -70,8 +70,8 @@ app.http('replyExpertForm', {
         try {
             await connectDB();
             const formId = request.params.id;
-            const { message, repliedById } = await request.json();
-            if (!message || !repliedById) {
+            const { message } = await request.json();
+            if (!message) {
                 return {
                     status: 400,
                     jsonBody: { message: 'Vui lòng nhập đầy đủ phản hồi và ID người trả lời.' }
@@ -84,9 +84,8 @@ app.http('replyExpertForm', {
                     jsonBody: { message: 'Không tìm thấy câu hỏi' }
                 };
             }
-            form.replies.push({ message, repliedBy: repliedById });
+            form.replies.push({ message });
             form.isHandled = true;
-            form.handledBy = repliedById;
             form.handledAt = new Date();
             await form.save();
             await sendExpertReplyMail(form.email, form.name, form.question, message);

@@ -249,7 +249,7 @@ const AdminLayout = () => {
 
           return (
             <ListItemButton
-              key={text} component={Link} to={path} selected={isActive}
+              key={path} component={Link} to={path} selected={isActive}
               sx={{
                 margin: theme.spacing(0.5, 0),
                 color: itemTextColor,
