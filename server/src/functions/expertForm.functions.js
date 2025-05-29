@@ -12,7 +12,8 @@ app.http('createExpertForm', {
     handler: async (request, context) => {
         try {
             await connectDB();
-            const { name, email, phone, question, topic } = await request.json();
+            const body = await request.json();
+            const { name, email, phone, question, topic } = body;
 
             if (!name || !email || !phone || !question || !topic) {
                 return { status: 400, jsonBody: { message: 'Thiếu thông tin bắt buộc' } };

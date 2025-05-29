@@ -34,8 +34,8 @@ import {
 } from "@mui/icons-material";
 import { ThemeProvider, createTheme, alpha } from "@mui/material/styles";
 import menuItems from "./menuItems";
-import axiosInstance from "../../helper/axiosInstance";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const drawerWidth = 260;
 const getAppTheme = (mode) => {
@@ -153,7 +153,7 @@ const AdminLayout = () => {
   const fetchNotifications = async () => {
     setLoadingNotifications(true);
     try {
-      const response = await axiosInstance.get("/notification");
+      const response = await axios.get("getNotifications");
       setNotifications(response.data || []);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
@@ -181,22 +181,22 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/auth/logout");
+      await axios.post("auth/logout");
       toast.success("Đăng xuất thành công!");
     } catch (error) {
       console.error("Logout API call failed:", error);
       toast.error(error.response?.data?.message || "Lỗi khi đăng xuất. Vui lòng thử lại.");
     } finally {
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
       localStorage.removeItem("themeMode");
       navigate("/");
     }
   };
 
+
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await axiosInstance.patch(`/notification/read/${notificationId}`);
+      await axios.patch(`notification/read/${notificationId}`);
       setNotifications(prev =>
         prev.map(n => (n._id === notificationId ? { ...n, isRead: true } : n))
       );
@@ -208,7 +208,7 @@ const AdminLayout = () => {
 
   const handleDeleteNotification = async (notificationId) => {
     try {
-      await axiosInstance.delete(`/notification/${notificationId}`);
+      await axios.delete(`notification/${notificationId}`);
       setNotifications(prev => prev.filter(n => n._id !== notificationId));
       toast.success("Đã xóa thông báo.");
     } catch (error) {

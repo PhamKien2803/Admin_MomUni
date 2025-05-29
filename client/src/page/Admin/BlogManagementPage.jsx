@@ -15,7 +15,6 @@ import {
     Category as CategoryIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import axiosInstance from '../../helper/axiosInstance';
 import { format } from 'date-fns';
 import BlogForm from './BlogForm';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
@@ -36,7 +35,7 @@ const BlogManagementPage = () => {
     const fetchBlogs = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/admin/blog');
+            const response = await axios.get('blog');
             setBlogs(response.data.blogs || []);
         } catch (error) {
             console.error('Failed to fetch blogs:', error);
@@ -75,7 +74,7 @@ const BlogManagementPage = () => {
     const handleDeleteBlog = async () => {
         if (!blogToDelete) return;
         try {
-            await axios.delete(`/admin/blog/delete/${blogToDelete._id}`);
+            await axios.delete(`blog/delete/${blogToDelete._id}`);
             toast.success(`Đã xóa bài viết: ${blogToDelete.title}`);
             handleCloseDeleteConfirm();
             fetchBlogs();
@@ -88,7 +87,7 @@ const BlogManagementPage = () => {
     const handleUpdateStatus = async (blogId, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
-            await axios.put(`/admin/blog/update-status/${blogId}?status=${newStatus}`);
+            await axios.put(`blog/update-status/${blogId}?status=${newStatus}`);
             toast.success(`Cập nhật trạng thái thành công.`);
             fetchBlogs();
         } catch (error) {

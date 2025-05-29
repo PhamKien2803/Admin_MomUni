@@ -68,45 +68,40 @@ module.exports.createBlog = async (req, res) => {
     }
 }
 
+
 module.exports.deleteBlog = async (req, res) => {
     try {
         const { id } = req.params;
+
         const blog = await Blogs.findById(id);
         if (!blog) {
             return res.status(404).json({ message: 'Blog not found' });
         }
-
-        if (blog.images && blog.images.length > 0) {
+        if (blog.images?.length > 0) {
             for (const img of blog.images) {
                 if (img.public_id) {
                     await cloudinary.uploader.destroy(img.public_id);
                 }
             }
         }
+        if (blog.video?.public_id) {
+            await cloudinary.uploader.destroy(blog.video.public_id);
+        }
         blog.deleted = true;
+        blog.status = 'inactive';
         await blog.save();
-        await Blogs.findByIdAndUpdate(id, {
-            status: true
-        });
-        const deleteAnalyticsBlog = await Analytics.deleteMany({ blogId: id });
-        if (!deleteAnalyticsBlog) {
-            return res.status(404).json({
-                message: "Analytics not found"
-            })
-        }
-        if (!deleteAnalyticsBlog) {
-            return res.status(404).json({ message: 'Blog not found' });
-        }
+        await Analytics.deleteMany({ blogId: id });
         await Blogs.findByIdAndDelete(id);
         res.status(200).json({
             code: 200,
-            message: 'Blog deleted successfully'
+            message: 'Blog deleted successfully (soft delete)'
         });
     } catch (error) {
         console.error('Error deleting blog:', error);
         res.status(500).json({ message: 'Internal server error', error });
     }
 };
+
 
 module.exports.updateBlog = async (req, res) => {
     try {

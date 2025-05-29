@@ -11,9 +11,9 @@ import {
 import { styled, alpha } from "@mui/material/styles";
 import MuiCard from "@mui/material/Card";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import axiosInstance from "../../helper/axiosInstance";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 const newPalette = {
     primary: "#CA877E",
@@ -83,7 +83,7 @@ const ForgotPassword = () => {
 
         setLoading(true);
         try {
-            const response = await axiosInstance.post("/auth/forgot-password", { email });
+            const response = await axios.post("auth/forgot-password", { email });
             toast.success(response.data.message || "Mã OTP đã được gửi, vui lòng kiểm tra email.", { autoClose: 2000 });
             setTimeout(() => {
                 localStorage.setItem("forgotPasswordEmail", email);

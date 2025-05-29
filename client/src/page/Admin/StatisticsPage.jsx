@@ -14,7 +14,6 @@ import {
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
-import axiosInstance from '../../helper/axiosInstance';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
@@ -80,9 +79,9 @@ const StatisticsPage = () => {
         setLoadingSummary(true);
         try {
             const [blogsRes, viewsRes, visitorsRes] = await Promise.all([
-                axios.get('/analytics/total-blogs'),
-                axios.get('/analytics/total-views'),
-                axios.get('/analytics/total-visitors'),
+                axios.get('analytics/total-blogs'),
+                axios.get('analytics/total-views'),
+                axios.get('analytics/total-visitors'),
             ]);
             setSummaryStats({
                 totalBlogs: blogsRes.data?.totalBlogs || 0,
@@ -104,7 +103,7 @@ const StatisticsPage = () => {
         }
         setLoadingAnalytics(true);
         try {
-            const response = await axiosInstance.get('/analytics', {
+            const response = await axios.get('/analytics', {
                 params: { startDate, endDate },
             });
             const formattedData = response.data.map(item => ({

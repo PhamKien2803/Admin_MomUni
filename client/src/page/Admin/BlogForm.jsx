@@ -238,10 +238,10 @@ const BlogForm = ({ open, onClose, blogData, onSaveSuccess }) => {
 
         try {
             if (blogData && blogData._id) {
-                await axiosInstance.put(`/admin/blog/update/${blogData._id}`, submissionData);
+                await axiosInstance.put(`blog/update/${blogData._id}`, submissionData);
                 toast.success('Cập nhật bài viết thành công!');
             } else {
-                await axiosInstance.post('/admin/blog/create', submissionData);
+                await axiosInstance.post('blog/create', submissionData);
                 toast.success('Tạo bài viết mới thành công!');
             }
             initialFormDataRef.current = JSON.parse(JSON.stringify(formData));

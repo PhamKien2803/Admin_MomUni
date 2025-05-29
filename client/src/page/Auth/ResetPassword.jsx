@@ -15,9 +15,9 @@ import MuiCard from "@mui/material/Card";
 import LockResetIcon from "@mui/icons-material/LockReset";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import axiosInstance from "../../helper/axiosInstance";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 const newPalette = {
   primary: "#CA877E",
@@ -107,7 +107,7 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      const response = await axiosInstance.put("/auth/reset-password", {
+      const response = await axios.put("auth/reset-password", {
         email: storedEmail,
         newPassword,
         confirmPassword,

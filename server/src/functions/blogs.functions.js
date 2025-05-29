@@ -70,7 +70,7 @@ app.http('createBlog', {
 app.http('deleteBlog', {
     methods: ['DELETE'],
     authLevel: 'anonymous',
-    route: 'admin/blog/delete/{id}',
+    route: 'blog/delete/{id}',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: deleteBlog.');
         try {
@@ -117,7 +117,7 @@ app.http('deleteBlog', {
 app.http('updateBlog', {
     methods: ['PUT'],
     authLevel: 'anonymous',
-    route: 'admin/blog/update/{id}',
+    route: 'blog/update/{id}',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: updateBlog.');
         try {
@@ -202,7 +202,7 @@ app.http('updateBlog', {
 app.http('getBlog', {
     methods: ['GET'],
     authLevel: 'anonymous',
-    route: 'admin/blog/all',
+    route: 'blog/all',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: getBlog.');
         try {
@@ -231,7 +231,7 @@ app.http('getBlog', {
 app.http('updateBlogStatus', {
     methods: ['PUT'],
     authLevel: 'anonymous',
-    route: 'admin/update-status/{id}',
+    route: 'update-status/{id}',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: updateBlogStatus.');
         try {

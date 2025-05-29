@@ -32,6 +32,7 @@ import {
 import { format } from 'date-fns';
 import axiosInstance from '../../helper/axiosInstance';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const BlogDetailPage = () => {
     const theme = useTheme();
@@ -45,7 +46,7 @@ const BlogDetailPage = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axiosInstance.get(`/blog/slug/${slug}`);
+            const response = await axios.get(`blog/slug/${slug}`);
             if (response.data && response.data.blog) {
                 setBlog(response.data.blog);
             } else {

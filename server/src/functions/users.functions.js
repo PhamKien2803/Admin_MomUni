@@ -49,6 +49,25 @@ app.http('LoginAccount', {
     }
 });
 
+
+app.http('LogoutAccount', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'auth/logout',
+    handler: async (request, context) => {
+        context.log('HTTP trigger function processed a request: LoginAccount.');
+        try {
+            await connectDB();
+            return res.status(200).json({ message: "Đăng xuất thành công" });
+        } catch (error) {
+            console.error("Lỗi khi đăng xuất:", error);
+            return res
+                .status(500)
+                .json({ message: "Lỗi trong quá trình đăng xuất", error: error.message });
+        }
+    }
+});
+
 app.http('ForgotPassword', {
     methods: ['POST'],
     authLevel: 'anonymous',

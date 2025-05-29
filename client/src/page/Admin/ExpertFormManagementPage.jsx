@@ -38,7 +38,6 @@ import {
     AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import axiosInstance from '../../helper/axiosInstance';
 import { format } from 'date-fns';
 import axios from 'axios';
 
@@ -56,7 +55,7 @@ const ExpertFormManagementPage = () => {
     const fetchForms = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/expert-form');
+            const response = await axios.get('/expert-form');
             setForms(response.data.data || []);
         } catch (error) {
             console.error('Failed to fetch expert forms:', error);
@@ -89,7 +88,7 @@ const ExpertFormManagementPage = () => {
         }
         setReplyLoading(true);
         try {
-            await axios.post(`/expert-form/reply/${selectedForm._id}`, {
+            await axios.post(`expert-form/reply/${selectedForm._id}`, {
                 message: replyMessage,
             });
             toast.success('Đã gửi phản hồi thành công!');
@@ -116,7 +115,7 @@ const ExpertFormManagementPage = () => {
     const handleDeleteForm = async () => {
         if (!formToDelete) return;
         try {
-            await axios.delete(`/expert-form/${formToDelete._id}`);
+            await axios.delete(`expert-form/${formToDelete._id}`);
             toast.success(`Đã xóa yêu cầu từ ${formToDelete.name}.`);
             handleCloseDeleteConfirm();
             fetchForms();

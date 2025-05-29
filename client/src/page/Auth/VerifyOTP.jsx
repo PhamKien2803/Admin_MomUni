@@ -11,9 +11,9 @@ import {
 import { styled, alpha } from "@mui/material/styles";
 import MuiCard from "@mui/material/Card";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
-import axiosInstance from "../../helper/axiosInstance";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 const newPalette = {
     primary: "#CA877E",
@@ -130,7 +130,7 @@ const VerifyOTP = () => {
     const verifyOtp = async (otpCode) => {
         setVerifying(true);
         try {
-            const response = await axiosInstance.post("/auth/verify-otp", { otp: otpCode });
+            const response = await axios.post("auth/verify-otp", { otp: otpCode });
             toast.success(response.data.message || "Xác thực OTP thành công!", { autoClose: 2000 });
             setTimeout(() => {
                 navigate("/reset-password");
@@ -154,7 +154,7 @@ const VerifyOTP = () => {
                 setCanResend(true);
                 return;
             }
-            await axiosInstance.post("/auth/forgot-password", { email });
+            await axios.post("auth/forgot-password", { email });
             toast.success("Mã OTP mới đã được gửi đến email của bạn.");
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Gửi lại OTP thất bại.";

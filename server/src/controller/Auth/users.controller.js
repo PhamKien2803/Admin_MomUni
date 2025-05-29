@@ -1,57 +1,9 @@
 const bcrypt = require("bcryptjs");
 const Users = require("../../model/users.model");
-// const { createAccessToken, createRefreshToken } = require("../../utils/jwt");
 const { sendOTPEmail } = require("../../utils/emailsOTP");
-// const { setAuthCookies } = require("../../utils/cookieUtils")
 
 
 
-
-//API: /api/auth/login
-// exports.loginAccount = async (req, res) => {
-//     try {
-//         const { username, password } = req.body;
-//         if (!username || !password) {
-//             return res
-//                 .status(400)
-//                 .json({ message: "Please enter complete information !" });
-//         }
-
-//         const user = await Users.findOne({ username });
-//         if (!user) {
-//             return res.status(404).json({
-//                 message: "Account not created !!",
-//             });
-//         }
-//         console.log(user);
-
-//         if (!user || !(await bcrypt.compare(password, user.password))) {
-//             return res
-//                 .status(401)
-//                 .json({ message: "Username or password is incorrect!!" });
-//         }
-
-//         const accessToken = createAccessToken({ id: user._id, role: user.role });
-//         const refreshToken = createRefreshToken();
-
-//         await Users.findByIdAndUpdate(
-//             user._id,
-//             { re_token: refreshToken },
-//             { new: true }
-//         );
-
-//         setAuthCookies(res, accessToken, refreshToken);
-//         return res.status(200).json({
-//             message: "Login successfully",
-//             accessToken: accessToken,
-//             re_token: refreshToken,
-//         });
-//     } catch (error) {
-//         return res
-//             .status(500)
-//             .json({ message: "Error while logging in", error: error.message });
-//     }
-// };
 
 //API: /api/auth/login
 exports.loginAccount = async (req, res) => {
@@ -90,94 +42,6 @@ exports.loginAccount = async (req, res) => {
             .json({ message: "Error while logging in", error: error.message });
     }
 };
-
-
-// exports.logOutAccount = async (req, res) => {
-//     try {
-//         const refreshTokenFromCookie = req.cookies.refreshToken;
-//         if (!refreshTokenFromCookie) {
-//             res.clearCookie('accessToken', {
-//                 httpOnly: true,
-//                 secure: process.env.NODE_ENV === "production",
-//                 sameSite: 'strict',
-//             });
-//             return res.status(200).json({ message: "Không có phiên hoạt động hoặc đã đăng xuất." });
-//         }
-//         const user = await Users.findOne({ re_token: refreshTokenFromCookie });
-
-//         if (user) {
-//             user.re_token = null;
-//             await user.save();
-//         }
-//         res.clearCookie('accessToken', {
-//             httpOnly: true,
-//             secure: process.env.NODE_ENV === "production",
-//             sameSite: 'strict',
-//             path: '/'
-//         });
-//         res.clearCookie('refreshToken', {
-//             httpOnly: true,
-//             secure: process.env.NODE_ENV === "production",
-//             sameSite: 'strict',
-//             path: '/'
-//         });
-
-//         return res.status(200).json({ message: "Đăng xuất thành công" });
-
-//     } catch (error) {
-//         console.error("Lỗi khi đăng xuất:", error);
-//         res.clearCookie('accessToken', { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: 'strict', path: '/' });
-//         res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: 'strict', path: '/' });
-//         return res
-//             .status(500)
-//             .json({ message: "Lỗi trong quá trình đăng xuất", error: error.message });
-//     }
-// };
-
-
-//API: /api/auth/forgot-password
-
-
-// exports.logOutAccount = async (req, res) => {
-//     try {
-//         const refreshTokenFromCookie = req.cookies.refreshToken;
-//         if (!refreshTokenFromCookie) {
-//             res.clearCookie('accessToken', {
-//                 httpOnly: true,
-//                 secure: process.env.NODE_ENV === "production",
-//                 sameSite: 'strict',
-//                 path: '/'
-//             });
-//         }
-//         const user = await Users.findOne({ re_token: refreshTokenFromCookie });
-//         if (user) {
-//             user.re_token = null;
-//             await user.save();
-//         }
-//         res.clearCookie('accessToken', {
-//             httpOnly: true,
-//             secure: process.env.NODE_ENV === "production",
-//             sameSite: 'strict',
-//             path: '/'
-//         });
-//         res.clearCookie('refreshToken', {
-//             httpOnly: true,
-//             secure: process.env.NODE_ENV === "production",
-//             sameSite: 'strict',
-//             path: '/'
-//         });
-
-//         return res.status(200).json({ message: "Đăng xuất thành công" });
-//     } catch (error) {
-//         console.error("Lỗi khi đăng xuất:", error);
-//         res.clearCookie('accessToken', { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: 'strict', path: '/' });
-//         res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: 'strict', path: '/' });
-//         return res
-//             .status(500)
-//             .json({ message: "Lỗi trong quá trình đăng xuất", error: error.message });
-//     }
-// };
-
 
 exports.logOutAccount = async (req, res) => {
     try {

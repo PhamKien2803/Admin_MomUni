@@ -17,7 +17,6 @@ import { useNavigate } from "react-router-dom";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import axiosInstance from "../../helper/axiosInstance";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
@@ -88,7 +87,7 @@ const LoginAdminPage = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("/auth/login", {
+      const response = await axios.post("auth/login", {
         username,
         password,
       });
