@@ -7,8 +7,13 @@ import BlogManagementPage from "./BlogManagementPage";
 import ExpertFormManagementPage from "./ExpertFormManagementPage";
 import StatisticsPage from "./StatisticsPage";
 import BlogDetailPage from "./BlogDetailPage";
+import AdminLayout from "./AdminLayout";
 
 const menuItems = [
+  // {
+  //   path: "/admin-dashboard",
+  //   component: AdminLayout,
+  // },
   {
     text: "Trang chủ",
     icon: <BarChartIcon />,

@@ -93,28 +93,19 @@ const LoginAdminPage = () => {
         password,
       });
 
-      localStorage.setItem("accessToken", response.data.accessToken);
-      localStorage.setItem("refreshToken", response.data.re_token);
+      const { user, message } = response.data;
 
-      const userData = getUserFromToken();
+      if (user && user.role) {
+        localStorage.setItem("user", JSON.stringify(user));
 
-      if (userData) {
-        if (userData.role === "admin") {
-          toast.success(
-            `Chào mừng Admin ${userData.name || userData.username}! 🎉`
-          );
+        if (user.role === "admin") {
+          toast.success(message || `Chào mừng Admin ${user.name || user.username}! 🎉`);
           navigate("/admin-dashboard");
         } else {
-          toast.error(
-            "Truy cập bị từ chối. Bạn không có quyền Admin. 🚫"
-          );
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          toast.error("Truy cập bị từ chối. Bạn không có quyền Admin. 🚫");
         }
       } else {
-        toast.error("Dữ liệu người dùng không hợp lệ! ❌");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        toast.error("Dữ liệu trả về từ server không hợp lệ! ❌");
       }
     } catch (err) {
       toast.error(
@@ -124,6 +115,7 @@ const LoginAdminPage = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <Box

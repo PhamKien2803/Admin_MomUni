@@ -1,8 +1,8 @@
 const bcrypt = require("bcryptjs");
 const Users = require("../../model/users.model");
-const { createAccessToken, createRefreshToken } = require("../../utils/jwt");
+// const { createAccessToken, createRefreshToken } = require("../../utils/jwt");
 const { sendOTPEmail } = require("../../utils/emailsOTP");
-const { setAuthCookies } = require("../../utils/cookieUtils")
+// const { setAuthCookies } = require("../../utils/cookieUtils")
 
 
 

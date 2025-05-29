@@ -190,7 +190,7 @@ const AdminLayout = () => {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("themeMode");
-      navigate("/login");
+      navigate("/");
     }
   };
 

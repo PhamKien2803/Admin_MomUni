@@ -1,17 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { getUserFromToken } from "../helper/authHelper";
 
 const PublicRoute = () => {
-    const accessToken = localStorage.getItem("accessToken");
+    const user = JSON.parse(localStorage.getItem("user"));
 
-    if (accessToken) {
-        const userData = getUserFromToken(accessToken);
-        if (userData) {
-            const { role } = userData;
-            if (role === "admin") return <Navigate to="/admin-dashboard" replace />;
-            return <Navigate to="/" replace />;
-        }
+    if (user) {
+        if (user.role === "admin") return <Navigate to="/admin-dashboard" replace />;
+        return <Navigate to="/" replace />;
     }
+
     return <Outlet />;
 };
 
