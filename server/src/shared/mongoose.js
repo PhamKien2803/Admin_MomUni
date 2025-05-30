@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 let cachedDb = null;
+
 /**
  * Connects to MongoDB using the Singleton Pattern to reuse the connection.
  * If a connection already exists, it will be reused. Otherwise, a new connection will be created.
@@ -10,6 +11,7 @@ const connectDB = async () => {
         console.log('=> Using existing MongoDB connection');
         return cachedDb;
     }
+
     const MONGO_URI = process.env.MONGO_URI;
     const MONGO_NAME = process.env.MONGO_NAME;
 
@@ -19,15 +21,16 @@ const connectDB = async () => {
     }
 
     try {
-        const connectionUri = `${MONGO_URI}${MONGO_NAME}`;
-        const client = await mongoose.connect(connectionUri, {
+        const client = await mongoose.connect(MONGO_URI, {
+            dbName: MONGO_NAME,
             useNewUrlParser: true,
             useUnifiedTopology: true,
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         });
+
         cachedDb = client.connection;
-        console.log('=> Established new MongoDB connection');
+        console.log(`=> Established new MongoDB connection to database: "${MONGO_NAME}"`);
         return cachedDb;
     } catch (error) {
         console.error('❌ MongoDB connection error:', error.message);
