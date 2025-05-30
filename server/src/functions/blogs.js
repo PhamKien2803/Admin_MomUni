@@ -126,9 +126,9 @@ app.http('deleteBlog', {
             if (blog.video && blog.video.public_id) {
                 await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
             }
-            // blog.deleted = true;
+            blog.deleted = true;
             // blog.status = 'inactive';
-            // await blog.save();
+            await blog.save();
             await Analytics.deleteMany({ blogId: id });
             await Blogs.findByIdAndDelete(id);
             return {
