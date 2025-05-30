@@ -11,8 +11,8 @@ import {
     CheckCircle as ActiveIcon, Cancel as InactiveIcon, WarningAmber as WarningIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import axiosInstance from '../../helper/axiosInstance';
 import { useTheme, alpha } from '@mui/material/styles';
+import axios from 'axios';
 
 
 const BlogForm = ({ open, onClose, blogData, onSaveSuccess }) => {
@@ -238,10 +238,10 @@ const BlogForm = ({ open, onClose, blogData, onSaveSuccess }) => {
 
         try {
             if (blogData && blogData._id) {
-                await axiosInstance.put(`blog/update/${blogData._id}`, submissionData);
+                await axios.put(`blog/update/${blogData._id}`, submissionData);
                 toast.success('Cập nhật bài viết thành công!');
             } else {
-                await axiosInstance.post('blog', submissionData);
+                await axios.post('blog', submissionData);
                 toast.success('Tạo bài viết mới thành công!');
             }
             initialFormDataRef.current = JSON.parse(JSON.stringify(formData));
