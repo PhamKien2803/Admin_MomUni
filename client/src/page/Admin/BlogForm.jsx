@@ -185,20 +185,12 @@ const BlogForm = ({ open, onClose, blogData, onSaveSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // if (!formData.authorId || formData.authorId === 'ADMIN_ID_PLACEHOLDER') {
-        //     toast.error("Vui lòng cung cấp ID tác giả hợp lệ.");
-        //     return;
-        // }
         setLoading(true);
-
         const submissionData = new FormData();
         submissionData.append('title', formData.title);
         submissionData.append('content', formData.content);
         submissionData.append('summary', formData.summary);
-        // submissionData.append('authorId', formData.authorId);
-
         formData.tags.forEach(tag => submissionData.append('tags[]', tag));
-
         const imageFiles = [];
         const imageCaptions = [];
         const existingImagesData = [];

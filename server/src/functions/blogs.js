@@ -3,6 +3,7 @@ const slugify = require("slugify");
 const Blogs = require("../shared/model/blogs.model");
 const Analytics = require("../shared/model/analytics.model")
 const connectDB = require('../shared/mongoose');
+const { cloudinary } = require('../shared/middleware/upload.middleware');
 
 app.http('createBlog', {
     methods: ['POST'],
@@ -114,6 +115,92 @@ app.http('deleteBlog', {
 });
 
 
+// app.http('updateBlog', {
+//     methods: ['PUT'],
+//     authLevel: 'anonymous',
+//     route: 'blog/update/{id}',
+//     handler: async (request, context) => {
+//         context.log('HTTP trigger function processed a request: updateBlog.');
+//         try {
+//             await connectDB();
+
+//             const id = request.params.id;
+//             const formData = await request.formData();
+//             if (!id) {
+//                 return { status: 400, jsonBody: { message: 'Blog ID is required' } };
+//             }
+
+//             const body = await request.json();
+//             const { title, content, summary, tags, affiliateLinks, images, video } = body;
+
+//             const blog = await Blogs.findById(id);
+//             if (!blog) {
+//                 return { status: 404, jsonBody: { message: 'Blog not found' } };
+//             }
+
+//             if (title) {
+//                 blog.title = title;
+//                 blog.slug = slugify(title, { lower: true, strict: true });
+//             }
+
+//             if (content !== undefined) blog.content = content;
+//             if (summary !== undefined) blog.summary = summary;
+//             if (images !== undefined) {
+//                 if (blog.images && blog.images.length > 0) {
+//                     for (const img of blog.images) {
+//                         if (img.public_id) await cloudinary.uploader.destroy(img.public_id);
+//                     }
+//                 }
+//                 blog.images = images.map(img => ({
+//                     url: img.url,
+//                     caption: img.caption || '',
+//                     public_id: img.public_id
+//                 }));
+//             }
+//             if (video !== undefined && video.url) {
+//                 if (blog.video && blog.video.public_id) {
+//                     await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
+//                 }
+//                 blog.video = {
+//                     url: video.url,
+//                     caption: video.caption || '',
+//                     public_id: video.public_id
+//                 };
+//             } else if (video === null) {
+//                 if (blog.video && blog.video.public_id) {
+//                     await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
+//                 }
+//                 blog.video = null;
+//             }
+//             if (tags !== undefined) {
+//                 blog.tags = Array.isArray(tags)
+//                     ? tags
+//                     : typeof tags === 'string'
+//                         ? tags.split(',').map(tag => tag.trim())
+//                         : [];
+//             }
+//             if (affiliateLinks !== undefined) {
+//                 blog.affiliateLinks = typeof affiliateLinks === 'string'
+//                     ? JSON.parse(affiliateLinks)
+//                     : affiliateLinks;
+//             }
+//             await blog.save();
+//             return {
+//                 status: 200,
+//                 jsonBody: {
+//                     code: 200,
+//                     message: "Update Blog Successfully",
+//                     blog: blog.toObject()
+//                 }
+//             };
+
+//         } catch (error) {
+//             context.log.error('Error updating blog:', error);
+//             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
+//         }
+//     }
+// });
+
 app.http('updateBlog', {
     methods: ['PUT'],
     authLevel: 'anonymous',
@@ -122,71 +209,80 @@ app.http('updateBlog', {
         context.log('HTTP trigger function processed a request: updateBlog.');
         try {
             await connectDB();
-
-            const id = request.params.id;
-            if (!id) {
-                return { status: 400, jsonBody: { message: 'Blog ID is required' } };
-            }
-
-            const body = await request.json();
-            const { title, content, summary, tags, affiliateLinks, images, video } = body;
+            const { id } = request.params;
+            const formData = await request.formData();
 
             const blog = await Blogs.findById(id);
             if (!blog) {
                 return { status: 404, jsonBody: { message: 'Blog not found' } };
             }
-
+            const title = formData.get('title');
             if (title) {
                 blog.title = title;
                 blog.slug = slugify(title, { lower: true, strict: true });
             }
+            if (formData.has('content')) blog.content = formData.get('content');
+            if (formData.has('summary')) blog.summary = formData.get('summary');
+            if (formData.has('status')) blog.status = formData.get('status');
 
-            if (content !== undefined) blog.content = content;
-            if (summary !== undefined) blog.summary = summary;
-            if (images !== undefined) {
+            if (formData.has('tags')) {
+                const tagsValue = formData.get('tags');
+                blog.tags = (typeof tagsValue === 'string' && tagsValue) ? tagsValue.split(',').map(tag => tag.trim()) : [];
+            }
+            if (formData.has('affiliateLinks')) {
+                blog.affiliateLinks = JSON.parse(formData.get('affiliateLinks'));
+            }
+            const newImageFiles = formData.getAll('images');
+            const captions = formData.getAll('captions');
+
+            if (newImageFiles && newImageFiles.length > 0 && newImageFiles[0].size > 0) {
                 if (blog.images && blog.images.length > 0) {
-                    for (const img of blog.images) {
-                        if (img.public_id) await cloudinary.uploader.destroy(img.public_id);
-                    }
+                    const deletePromises = blog.images.map(img =>
+                        img.public_id ? cloudinary.uploader.destroy(img.public_id) : Promise.resolve()
+                    );
+                    await Promise.all(deletePromises);
                 }
-                blog.images = images.map(img => ({
-                    url: img.url,
-                    caption: img.caption || '',
-                    public_id: img.public_id
+                const uploadPromises = newImageFiles.map(file => {
+                    return new Promise(async (resolve, reject) => {
+                        const buffer = Buffer.from(await file.arrayBuffer());
+                        cloudinary.uploader.upload_stream({ folder: "blogs" }, (error, result) => {
+                            if (error) return reject(error);
+                            resolve(result);
+                        }).end(buffer);
+                    });
+                });
+                const uploadResults = await Promise.all(uploadPromises);
+                blog.images = uploadResults.map((result, index) => ({
+                    url: result.secure_url,
+                    public_id: result.public_id,
+                    caption: captions[index] || ''
                 }));
             }
-            if (video !== undefined && video.url) {
+            const newVideoFile = formData.get('video');
+            if (newVideoFile && newVideoFile.size > 0) {
+                // 1. Xóa video cũ trên Cloudinary
                 if (blog.video && blog.video.public_id) {
                     await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
                 }
+                const videoUploadPromise = new Promise(async (resolve, reject) => {
+                    const buffer = Buffer.from(await newVideoFile.arrayBuffer());
+                    cloudinary.uploader.upload_stream({ resource_type: 'video', folder: "blogs" }, (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result);
+                    }).end(buffer);
+                });
+                const videoResult = await videoUploadPromise;
                 blog.video = {
-                    url: video.url,
-                    caption: video.caption || '',
-                    public_id: video.public_id
+                    url: videoResult.secure_url,
+                    public_id: videoResult.public_id,
+                    caption: formData.get('video_caption') || ''
                 };
-            } else if (video === null) {
-                if (blog.video && blog.video.public_id) {
-                    await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
-                }
-                blog.video = null;
             }
-            if (tags !== undefined) {
-                blog.tags = Array.isArray(tags)
-                    ? tags
-                    : typeof tags === 'string'
-                        ? tags.split(',').map(tag => tag.trim())
-                        : [];
-            }
-            if (affiliateLinks !== undefined) {
-                blog.affiliateLinks = typeof affiliateLinks === 'string'
-                    ? JSON.parse(affiliateLinks)
-                    : affiliateLinks;
-            }
+
             await blog.save();
             return {
                 status: 200,
                 jsonBody: {
-                    code: 200,
                     message: "Update Blog Successfully",
                     blog: blog.toObject()
                 }
@@ -198,6 +294,7 @@ app.http('updateBlog', {
         }
     }
 });
+
 
 app.http('getBlog', {
     methods: ['GET'],

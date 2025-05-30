@@ -170,7 +170,7 @@ const ForgotPassword = () => {
                     Đã nhớ mật khẩu?{" "}
                     <MUILink
                         component={RouterLink}
-                        to="/login"
+                        to="/"
                         sx={{
                             color: newPalette.primary,
                             fontWeight: "bold",
