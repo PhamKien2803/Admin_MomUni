@@ -7,7 +7,7 @@ const connectDB = require('../shared/mongoose');
 app.http('createBlog', {
     methods: ['POST'],
     authLevel: 'anonymous',
-    route: 'blog/create',
+    route: 'blog',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: createBlog.');
         try {
