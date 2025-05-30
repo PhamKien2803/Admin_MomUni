@@ -116,7 +116,7 @@ const ResetPassword = () => {
       toast.success(response?.data?.message || "Đặt lại mật khẩu thành công!");
       setTimeout(() => {
         localStorage.removeItem("forgotPasswordEmail");
-        navigate("/login");
+        navigate("/");
       }, 2000);
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Đã có lỗi xảy ra!";

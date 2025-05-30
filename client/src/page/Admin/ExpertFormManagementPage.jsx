@@ -115,7 +115,7 @@ const ExpertFormManagementPage = () => {
     const handleDeleteForm = async () => {
         if (!formToDelete) return;
         try {
-            await axios.delete(`expert-form/${formToDelete._id}`);
+            await axios.delete(`expert-forms/${formToDelete._id}`);
             toast.success(`Đã xóa yêu cầu từ ${formToDelete.name}.`);
             handleCloseDeleteConfirm();
             fetchForms();

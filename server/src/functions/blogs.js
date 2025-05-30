@@ -420,7 +420,7 @@ app.http('getBlog', {
 app.http('updateBlogStatus', {
     methods: ['PUT'],
     authLevel: 'anonymous',
-    route: 'update-status/{id}',
+    route: 'update-status/{id}?status={status}',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: updateBlogStatus.');
         try {
