@@ -17,7 +17,7 @@ import {
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import BlogForm from './BlogForm';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 
 const BlogManagementPage = () => {
@@ -28,7 +28,6 @@ const BlogManagementPage = () => {
     const [formOpen, setFormOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [blogToDelete, setBlogToDelete] = useState(null);
-
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -87,7 +86,7 @@ const BlogManagementPage = () => {
     const handleUpdateStatus = async (blogId, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
-            await axios.put(`blog/update-status/${blogId}?status=${newStatus}`);
+            await axios.put(`update-status/${blogId}?status=${newStatus}`);
             toast.success(`Cập nhật trạng thái thành công.`);
             fetchBlogs();
         } catch (error) {

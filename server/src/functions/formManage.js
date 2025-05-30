@@ -1,6 +1,7 @@
 const { app } = require('@azure/functions');
 const connectDB = require('../shared/mongoose');
 const ExpertForm = require("../shared/model/expertForm.model");
+const { sendExpertReplyMail } = require("../shared/utils/emailsExpertForm");
 
 app.http('getExpertForm', {
     methods: ['GET'],

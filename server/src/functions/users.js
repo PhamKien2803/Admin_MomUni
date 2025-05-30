@@ -2,6 +2,7 @@ const { app } = require('@azure/functions');
 const bcrypt = require('bcryptjs');
 const Users = require("../shared/model/users.model");
 const connectDB = require('../shared/mongoose');
+const { sendOTPEmail } = require('../shared/utils/emailsOTP');
 
 
 app.http('RegisterAccount', {
