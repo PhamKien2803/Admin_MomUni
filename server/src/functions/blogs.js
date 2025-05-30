@@ -5,68 +5,6 @@ const Analytics = require("../shared/model/analytics.model")
 const connectDB = require('../shared/mongoose');
 const { cloudinary } = require('../shared/middleware/upload.middleware');
 
-// app.http('createBlog', {
-//     methods: ['POST'],
-//     authLevel: 'anonymous',
-//     route: 'blog/create',
-//     handler: async (request, context) => {
-//         context.log('HTTP trigger function processed a request: createBlog.');
-//         try {
-//             await connectDB();
-//             const body = await request.json();
-//             const { title, content, tags, affiliateLinks, images, video } = body;
-//             if (!title || !content) {
-//                 return { status: 400, jsonBody: { message: 'Missing required fields: title, content' } };
-//             }
-//             const blogData = { ...body };
-//             blogData.slug = slugify(title, { lower: true, strict: true });
-
-//             if (tags !== undefined) {
-//                 blogData.tags = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
-//             }
-//             if (affiliateLinks !== undefined) {
-//                 blogData.affiliateLinks = typeof affiliateLinks === 'string' ? JSON.parse(affiliateLinks) : affiliateLinks;
-//             }
-//             if (images && Array.isArray(images)) {
-//                 blogData.images = images.map(img => ({
-//                     url: img.url,
-//                     caption: img.caption || '',
-//                     public_id: img.public_id
-//                 }));
-//             }
-//             if (video && video.url) {
-//                 blogData.video = {
-//                     url: video.url,
-//                     caption: video.caption || '',
-//                     public_id: video.public_id
-//                 };
-//             }
-//             const newBlog = new Blogs(blogData);
-//             await newBlog.save();
-//             const newAnalytics = new Analytics({
-//                 blogId: newBlog._id,
-//                 action: "create",
-//                 affiliateUrl: null,
-//                 revenue: 0,
-//                 ip: request.headers.get('x-forwarded-for') || request.ip,
-//                 userAgent: request.headers.get('user-agent'),
-//                 timestamp: new Date()
-//             });
-//             await newAnalytics.save();
-//             return {
-//                 status: 201,
-//                 jsonBody: {
-//                     code: 201,
-//                     message: "Create Blog Successfully",
-//                     blogId: newBlog._id
-//                 }
-//             };
-//         } catch (error) {
-//             context.log.error('Error creating blog:', error);
-//             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
-//         }
-//     }
-// });
 
 app.http('createBlog', {
     methods: ['POST'],
@@ -188,9 +126,9 @@ app.http('deleteBlog', {
             if (blog.video && blog.video.public_id) {
                 await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
             }
-            blog.deleted = true;
-            blog.status = 'inactive';
-            await blog.save();
+            // blog.deleted = true;
+            // blog.status = 'inactive';
+            // await blog.save();
             await Analytics.deleteMany({ blogId: id });
             await Blogs.findByIdAndDelete(id);
             return {

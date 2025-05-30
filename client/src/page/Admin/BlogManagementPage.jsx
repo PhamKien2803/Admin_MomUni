@@ -88,7 +88,7 @@ const BlogManagementPage = () => {
         try {
             await axios.put(`update-status/${blogId}?status=${newStatus}`);
             toast.success(`Cập nhật trạng thái thành công.`);
-            // fetchBlogs();
+            fetchBlogs();
         } catch (error) {
             console.error('Failed to update blog status:', error);
             toast.error(error.response?.data?.message || 'Cập nhật trạng thái thất bại.');
