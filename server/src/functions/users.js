@@ -4,6 +4,79 @@ const Users = require("../shared/model/users.model");
 const connectDB = require('../shared/mongoose');
 
 
+app.http('RegisterAccount', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'auth/register',
+    handler: async (request, context) => {
+        context.log('HTTP trigger function processed a request: RegisterAccount.');
+        try {
+            await connectDB();
+            const body = await request.json();
+            const { email, username, password } =
+                body;
+
+            if (!email || !username || !password) {
+                return {
+                    status: 400,
+                    jsonBody: { message: "Please enter complete information!" }
+                }
+            }
+
+            const existingUser = await Users.findOne({
+                $or: [{ email }, { username }],
+            });
+
+            if (existingUser) {
+                return {
+                    status: 400,
+                    jsonBody: { message: "Email or username already exists!" }
+                };
+            }
+            try {
+                const newAccount = new Users({
+                    email,
+                    username,
+                    password,
+                });
+                await newAccount.save();
+
+                return {
+                    status: 201,
+                    jsonBody: {
+                        message: "Account created successfully",
+                        user: {
+                            id: newAccount._id,
+                            username: newAccount.username,
+                            role: newAccount.role
+                        }
+                    }
+                };
+            } catch (error) {
+                if (error.name === "ValidationError") {
+                    const validationErrors = Object.values(error.errors).map(
+                        (err) => err.message
+                    );
+                    return {
+                        status: 400,
+                        jsonBody: { message: "Validation error", errors: validationErrors }
+                    }
+                }
+                return {
+                    status: 500,
+                    jsonBody: { message: "Error while logging in", error: error.message }
+                };
+            }
+        } catch (error) {
+            return {
+                status: 500,
+                jsonBody: { message: "Error while logging in", error: error.message }
+            };
+        }
+    }
+})
+
+
 app.http('LoginAccount', {
     methods: ['POST'],
     authLevel: 'anonymous',
