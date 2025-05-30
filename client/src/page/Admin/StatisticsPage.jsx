@@ -79,9 +79,9 @@ const StatisticsPage = () => {
         setLoadingSummary(true);
         try {
             const [blogsRes, viewsRes, visitorsRes] = await Promise.all([
-                axios.get('analytics/total-blogs'),
-                axios.get('analytics/total-views'),
-                axios.get('analytics/total-visitors'),
+                axios.get('analytic/total-blogs'),
+                axios.get('analytic/total-views'),
+                axios.get('analytic/total-visitors'),
             ]);
             setSummaryStats({
                 totalBlogs: blogsRes.data?.totalBlogs || 0,
@@ -103,7 +103,7 @@ const StatisticsPage = () => {
         }
         setLoadingAnalytics(true);
         try {
-            const response = await axios.get('/analytics', {
+            const response = await axios.get('/analytic', {
                 params: { startDate, endDate },
             });
             const formattedData = response.data.map(item => ({
