@@ -34,7 +34,7 @@ const BlogManagementPage = () => {
     const fetchBlogs = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axios.get('blog');
+            const response = await axios.get('blog/all');
             setBlogs(response.data.blogs || []);
         } catch (error) {
             console.error('Failed to fetch blogs:', error);
