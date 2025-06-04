@@ -16,7 +16,7 @@ import MDEditor from '@uiw/react-md-editor';
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
 import slugify from 'slugify';
-import axiosInstance from './../../helper/axiosInstance';
+import { axios } from 'axios';
 
 
 const generateHeadings = (markdown) => {
@@ -271,10 +271,10 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
 
 
             if (blogData?._id) {
-                await axiosInstance.put(`admin/blog/update/${blogData._id}`, data);
+                await axios.put(`blog/update/${blogData._id}`, data);
                 toast.success('Cập nhật bài viết thành công!');
             } else {
-                await axiosInstance.post('admin/blog/create', data);
+                await axios.post('blog/create', data);
                 toast.success('Tạo bài viết mới thành công!');
             }
             onSaveSuccess();
