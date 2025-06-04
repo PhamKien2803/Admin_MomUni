@@ -16,7 +16,7 @@ import MDEditor from '@uiw/react-md-editor';
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
 import slugify from 'slugify';
-import { axios } from 'axios';
+import axios from 'axios';
 
 
 const generateHeadings = (markdown) => {
