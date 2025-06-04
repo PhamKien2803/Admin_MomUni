@@ -62,7 +62,7 @@ app.http('getRatings', {
                 }
             };
         } catch (error) {
-            context.log.error('Lỗi khi lấy rating:', error);
+            context.log('Lỗi khi lấy rating:', error);
             return { status: 500, jsonBody: { message: 'Lỗi server, vui lòng thử lại sau' } };
         }
     }
@@ -114,7 +114,7 @@ app.http('createRating', {
                 }
             };
         } catch (error) {
-            context.log.error('Lỗi khi tạo rating:', error);
+            context.log('Lỗi khi tạo rating:', error);
             return { status: 500, jsonBody: { message: 'Lỗi server, vui lòng thử lại sau' } };
         }
     }

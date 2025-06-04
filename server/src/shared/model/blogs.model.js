@@ -3,9 +3,16 @@ const { default: mongoose } = require("mongoose");
 const BlogsSchema = new mongoose.Schema({
     title: String,
     slug: String,
+    headings: [{ text: String, slug: String, level: Number }],
+    contentMarkdown: { type: String, default: '' },
     content: String,
     summary: String,
     tags: [String],
+    headings: [{
+        text: String,
+        slug: String,
+        level: Number
+    }],
     authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     affiliateLinks: [
         {

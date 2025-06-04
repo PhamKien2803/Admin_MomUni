@@ -6,12 +6,106 @@ const connectDB = require('../shared/mongoose');
 const { cloudinary } = require('../shared/middleware/upload.middleware');
 
 
+// app.http('createBlog', {
+//     methods: ['POST'],
+//     authLevel: 'anonymous',
+//     route: 'blog/create',
+//     handler: async (request, context) => {
+//         context.log('HTTP trigger function processed a request: createBlog.');
+//         try {
+//             await connectDB();
+//             const formData = await request.formData();
+//             const title = formData.get('title');
+//             const content = formData.get('content');
+
+//             if (!title || !content) {
+//                 return { status: 400, jsonBody: { message: 'Missing required fields: title, content' } };
+//             }
+//             let uploadedImages = [];
+//             let uploadedVideo = null;
+//             const imageFiles = formData.getAll('images');
+//             const captions = formData.getAll('captions');
+//             if (imageFiles && imageFiles.length > 0 && imageFiles[0].size > 0) {
+//                 const uploadPromises = imageFiles.map(file => {
+//                     return new Promise(async (resolve, reject) => {
+//                         const buffer = Buffer.from(await file.arrayBuffer());
+//                         cloudinary.uploader.upload_stream({ folder: "blogs" }, (error, result) => {
+//                             if (error) return reject(error);
+//                             resolve(result);
+//                         }).end(buffer);
+//                     });
+//                 });
+//                 const uploadResults = await Promise.all(uploadPromises);
+//                 uploadedImages = uploadResults.map((result, index) => ({
+//                     url: result.secure_url,
+//                     public_id: result.public_id,
+//                     caption: captions[index] || ''
+//                 }));
+//             }
+
+//             const videoFile = formData.get('video');
+//             if (videoFile && videoFile.size > 0) {
+//                 const videoUploadPromise = new Promise(async (resolve, reject) => {
+//                     const buffer = Buffer.from(await videoFile.arrayBuffer());
+//                     cloudinary.uploader.upload_stream({ resource_type: 'video', folder: "blogs" }, (error, result) => {
+//                         if (error) return reject(error);
+//                         resolve(result);
+//                     }).end(buffer);
+//                 });
+//                 const videoResult = await videoUploadPromise;
+//                 uploadedVideo = {
+//                     url: videoResult.secure_url,
+//                     public_id: videoResult.public_id,
+//                     caption: formData.get('video_caption') || ''
+//                 };
+//             }
+//             const blogData = {
+//                 title,
+//                 content,
+//                 slug: slugify(title, { lower: true, strict: true }),
+//                 summary: formData.get('summary') || '',
+//                 status: formData.get('status') || 'draft',
+//                 images: uploadedImages,
+//                 video: uploadedVideo,
+//                 tags: formData.has('tags') ? (formData.get('tags')).split(',').map(tag => tag.trim()) : [],
+//                 affiliateLinks: formData.has('affiliateLinks') ? JSON.parse(formData.get('affiliateLinks')) : []
+//             };
+
+//             const newBlog = new Blogs(blogData);
+//             await newBlog.save();
+//             const newAnalytics = new Analytics({
+//                 blogId: newBlog._id,
+//                 action: "create",
+//                 affiliateUrl: null,
+//                 revenue: 0,
+//                 ip: request.headers.get('x-forwarded-for') || "unknown",
+//                 userAgent: request.headers.get('user-agent'),
+//                 timestamp: new Date()
+//             });
+//             await newAnalytics.save();
+
+//             return {
+//                 status: 201,
+//                 jsonBody: {
+//                     message: "Create Blog Successfully",
+//                     blogId: newBlog._id
+//                 }
+//             };
+
+//         } catch (error) {
+//             context.log('Error creating blog:', error);
+//             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
+//         }
+//     }
+// });
+
 app.http('createBlog', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'blog/create',
     handler: async (request, context) => {
         context.log('HTTP trigger function processed a request: createBlog.');
+
         try {
             await connectDB();
             const formData = await request.formData();
@@ -19,12 +113,50 @@ app.http('createBlog', {
             const content = formData.get('content');
 
             if (!title || !content) {
-                return { status: 400, jsonBody: { message: 'Missing required fields: title, content' } };
+                return { status: 400, jsonBody: { message: 'Thiếu các trường bắt buộc: title, content' } };
             }
-            let uploadedImages = [];
-            let uploadedVideo = null;
-            const imageFiles = formData.getAll('images');
-            const captions = formData.getAll('captions');
+
+            const summary = formData.get('summary');
+            const status = formData.get('status');
+            const tags = formData.get('tags');
+            const affiliateLinks = formData.get('affiliateLinks');
+            const headings = formData.get('headings');
+            const newBlogData = {
+                title,
+                content,
+                summary: summary || '',
+                status: status || 'inactive',
+                slug: slugify(title, { lower: true, strict: true })
+            };
+            if (tags && typeof tags === 'string') {
+                newBlogData.tags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            } else {
+                newBlogData.tags = [];
+            }
+
+            if (affiliateLinks && typeof affiliateLinks === 'string') {
+                try {
+                    newBlogData.affiliateLinks = JSON.parse(affiliateLinks);
+                } catch (e) {
+                    return { status: 400, jsonBody: { message: 'Định dạng JSON của affiliateLinks không hợp lệ.' } };
+                }
+            } else {
+                newBlogData.affiliateLinks = [];
+            }
+
+            if (headings && typeof headings === 'string') {
+                try {
+                    newBlogData.headings = JSON.parse(headings);
+                } catch (e) {
+                    return { status: 400, jsonBody: { message: 'Định dạng JSON của headings không hợp lệ.' } };
+                }
+            } else {
+                newBlogData.headings = [];
+            }
+            const imageFiles = formData.getAll('newImages');
+            const captions = formData.getAll('newImageCaptions');
+            newBlogData.images = []; // Khởi tạo mảng rỗng
+
             if (imageFiles && imageFiles.length > 0 && imageFiles[0].size > 0) {
                 const uploadPromises = imageFiles.map(file => {
                     return new Promise(async (resolve, reject) => {
@@ -36,14 +168,16 @@ app.http('createBlog', {
                     });
                 });
                 const uploadResults = await Promise.all(uploadPromises);
-                uploadedImages = uploadResults.map((result, index) => ({
+                newBlogData.images = uploadResults.map((result, index) => ({
                     url: result.secure_url,
                     public_id: result.public_id,
                     caption: captions[index] || ''
                 }));
             }
+            const videoFile = formData.get('newVideo');
+            const videoCaption = formData.get('newVideoCaption');
+            newBlogData.video = null;
 
-            const videoFile = formData.get('video');
             if (videoFile && videoFile.size > 0) {
                 const videoUploadPromise = new Promise(async (resolve, reject) => {
                     const buffer = Buffer.from(await videoFile.arrayBuffer());
@@ -53,33 +187,19 @@ app.http('createBlog', {
                     }).end(buffer);
                 });
                 const videoResult = await videoUploadPromise;
-                uploadedVideo = {
+                newBlogData.video = {
                     url: videoResult.secure_url,
                     public_id: videoResult.public_id,
-                    caption: formData.get('video_caption') || ''
+                    caption: videoCaption || ''
                 };
             }
-            const blogData = {
-                title,
-                content,
-                slug: slugify(title, { lower: true, strict: true }),
-                summary: formData.get('summary') || '',
-                status: formData.get('status') || 'draft',
-                images: uploadedImages,
-                video: uploadedVideo,
-                tags: formData.has('tags') ? (formData.get('tags')).split(',').map(tag => tag.trim()) : [],
-                affiliateLinks: formData.has('affiliateLinks') ? JSON.parse(formData.get('affiliateLinks')) : []
-            };
-
-            const newBlog = new Blogs(blogData);
+            const newBlog = new Blogs(newBlogData);
             await newBlog.save();
             const newAnalytics = new Analytics({
                 blogId: newBlog._id,
                 action: "create",
-                affiliateUrl: null,
-                revenue: 0,
                 ip: request.headers.get('x-forwarded-for') || "unknown",
-                userAgent: request.headers.get('user-agent'),
+                userAgent: request.headers.get('user-agent') || "unknown",
                 timestamp: new Date()
             });
             await newAnalytics.save();
@@ -87,14 +207,14 @@ app.http('createBlog', {
             return {
                 status: 201,
                 jsonBody: {
-                    message: "Create Blog Successfully",
-                    blogId: newBlog._id
+                    message: "Tạo bài viết mới thành công!",
+                    blog: newBlog
                 }
             };
 
         } catch (error) {
-            context.log.error('Error creating blog:', error);
-            return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
+            context.log('Error creating blog:', error);
+            return { status: 500, jsonBody: { message: 'Lỗi máy chủ nội bộ', error: error.message } };
         }
     }
 });
@@ -127,7 +247,7 @@ app.http('deleteBlog', {
                 await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
             }
             blog.deleted = true;
-            // blog.status = 'inactive';
+            blog.status = 'inactive';
             await blog.save();
             await Analytics.deleteMany({ blogId: id });
             await Blogs.findByIdAndDelete(id);
@@ -139,7 +259,7 @@ app.http('deleteBlog', {
                 }
             };
         } catch (error) {
-            context.log.error('Error deleting blog:', error);
+            context.log('Error deleting blog:', error);
             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
         }
     }
@@ -233,7 +353,7 @@ app.http('updateBlog', {
             };
 
         } catch (error) {
-            context.log.error('Error updating blog:', error);
+            context.log('Error updating blog:', error);
             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
         }
     }
@@ -262,7 +382,7 @@ app.http('getBlog', {
                 }
             };
         } catch (error) {
-            context.log.error('Error getting all blogs:', error);
+            context.log('Error getting all blogs:', error);
             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
         }
     }
@@ -301,7 +421,7 @@ app.http('updateBlogStatus', {
                 },
             };
         } catch (error) {
-            context.log.error('Error updating blog status:', error);
+            context.log('Error updating blog status:', error);
             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
         }
     }

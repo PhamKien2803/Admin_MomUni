@@ -317,22 +317,6 @@ const BlogForm = ({ open, onClose, blogData, onSaveSuccess }) => {
                                         size="small"
                                     />
                                 </Grid>
-                                {/* <Grid item xs={12}>
-                                    <TextField
-                                        label="ID Tác giả (Admin)"
-                                        name="authorId"
-                                        value={formData.authorId}
-                                        onChange={handleChange}
-                                        fullWidth
-                                        required
-                                        variant="outlined"
-                                        size="small"
-                                        helperText="ID của admin tạo bài viết này."
-                                        InputProps={{
-                                            readOnly: !!blogData,
-                                        }}
-                                    />
-                                </Grid> */}
                                 <Grid item xs={12}>
                                     <Autocomplete
                                         multiple

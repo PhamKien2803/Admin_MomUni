@@ -43,7 +43,7 @@ app.http('createComment', {
                 }
             };
         } catch (error) {
-            context.log.error('Lỗi khi tạo comment:', error);
+            context.log('Lỗi khi tạo comment:', error);
             return { status: 500, jsonBody: { message: 'Lỗi server, vui lòng thử lại sau' } };
         }
     }
@@ -92,7 +92,7 @@ app.http('getComments', {
                 }
             };
         } catch (error) {
-            context.log.error('Lỗi khi lấy comment:', error);
+            context.log('Lỗi khi lấy comment:', error);
             return { status: 500, jsonBody: { message: 'Lỗi server, vui lòng thử lại sau' } };
         }
     }

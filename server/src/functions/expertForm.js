@@ -35,7 +35,7 @@ app.http('createExpertForm', {
                 jsonBody: { message: 'Gửi câu hỏi thành công', data: newForm }
             };
         } catch (error) {
-            context.log.error("Lỗi gửi form:", error.message);
+            context.log("Lỗi gửi form:", error.message);
             return {
                 status: 500,
                 jsonBody: {

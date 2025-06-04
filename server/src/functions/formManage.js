@@ -22,7 +22,7 @@ app.http('getExpertForm', {
                 }
             };
         } catch (error) {
-            context.log.error("Error in getExpertForm:", error.message);
+            context.log("Error in getExpertForm:", error.message);
             return {
                 status: 500,
                 jsonBody: {
@@ -59,7 +59,7 @@ app.http('deleteExpertForm', {
                 }
             };
         } catch (error) {
-            context.log.error("Error in deleteExpertForm:", error.message);
+            context.log("Error in deleteExpertForm:", error.message);
             return {
                 status: 500,
                 jsonBody: {
@@ -111,7 +111,7 @@ app.http('replyExpertForm', {
             };
 
         } catch (error) {
-            context.log.error("Error in replyExpertForm:", error.message);
+            context.log("Error in replyExpertForm:", error.message);
             return {
                 status: 500,
                 jsonBody: {

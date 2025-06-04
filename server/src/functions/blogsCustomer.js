@@ -34,7 +34,7 @@ app.http('getBlogBySlug', {
                 }
             };
         } catch (error) {
-            context.log.error('Lỗi khi lấy blog:', error.message);
+            context.log('Lỗi khi lấy blog:', error.message);
             return {
                 status: 500,
                 jsonBody: { message: 'Lỗi server, vui lòng thử lại sau' }
@@ -70,7 +70,7 @@ app.http('getAllBlogs', {
                 }
             };
         } catch (error) {
-            context.log.error('Lỗi khi lấy danh sách blog:', error.message);
+            context.log('Lỗi khi lấy danh sách blog:', error.message);
             return {
                 status: 500,
                 jsonBody: { message: 'Lỗi server, vui lòng thử lại sau' }

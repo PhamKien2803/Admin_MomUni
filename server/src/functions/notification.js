@@ -14,7 +14,7 @@ app.http('getNotifications', {
                 jsonBody: notifications
             };
         } catch (err) {
-            context.log.error('Error in getNotifications:', err.message);
+            context.log('Error in getNotifications:', err.message);
             return {
                 status: 500,
                 jsonBody: { message: 'Lỗi server khi lấy thông báo' }
@@ -37,7 +37,7 @@ app.http('markAsRead', {
                 jsonBody: { message: 'Đã đánh dấu là đã đọc.' }
             };
         } catch (err) {
-            context.log.error('Error in markAsRead:', err.message);
+            context.log('Error in markAsRead:', err.message);
             return {
                 status: 500,
                 jsonBody: { message: 'Lỗi server khi cập nhật.' }
@@ -60,7 +60,7 @@ app.http('deleteNotification', {
                 jsonBody: { message: 'Đã xóa thông báo.' }
             };
         } catch (err) {
-            context.log.error('Error in deleteNotification:', err.message);
+            context.log('Error in deleteNotification:', err.message);
             return {
                 status: 500,
                 jsonBody: { message: 'Lỗi server khi xóa thông báo.' }

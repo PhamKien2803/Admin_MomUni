@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import BlogForm from './BlogForm';
 import { Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
+import BlogForm2 from './BlogForm2';
 
 const BlogManagementPage = () => {
     const theme = useTheme();
@@ -242,7 +243,14 @@ const BlogManagementPage = () => {
                 </>
             )}
 
-            <BlogForm
+            {/* <BlogForm
+                open={formOpen}
+                onClose={handleCloseForm}
+                blogData={selectedBlog}
+                onSaveSuccess={fetchBlogs}
+            /> */}
+
+            <BlogForm2
                 open={formOpen}
                 onClose={handleCloseForm}
                 blogData={selectedBlog}
