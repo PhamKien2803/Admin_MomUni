@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const AnalyticsSchema = new mongoose.Schema({
     blogId: { type: mongoose.Schema.Types.ObjectId, ref: 'blogs' },
-    action: { type: String, enum: ['view', 'click', 'form_submit', 'purchase', 'visit', 'create'], required: true },
+    action: { type: String, enum: ['view', 'click', 'form_submit', 'purchase', 'visit', 'create', 'update'], required: true },
     affiliateUrl: String,
     revenue: Number,
     ip: String,

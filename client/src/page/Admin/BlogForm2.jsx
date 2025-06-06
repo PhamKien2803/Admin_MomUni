@@ -16,8 +16,9 @@ import MDEditor from '@uiw/react-md-editor';
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
 import slugify from 'slugify';
-import axios from 'axios';
+import axiosInstance from './../../helper/axiosInstance';
 
+// --- TIỆN ÍCH ---
 
 const generateHeadings = (markdown) => {
     const headings = [];
@@ -35,6 +36,8 @@ const generateHeadings = (markdown) => {
     return headings;
 };
 
+// --- COMPONENT CHÍNH ---
+
 const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
     const theme = useTheme();
     const emptyBlog = {
@@ -42,7 +45,7 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
         contentMarkdown: '',
         summary: '',
         authorId: '',
-        tags: [],
+        tags: '',
         images: [],
         video: null,
         affiliateLinks: [],
@@ -57,18 +60,19 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
 
     const isFormDirty = () => JSON.stringify(formData) !== JSON.stringify(initialFormDataRef.current);
 
+
     useEffect(() => {
         if (open) {
             let initialData;
             if (blogData) {
                 initialData = {
                     title: blogData.title || '',
-                    contentMarkdown: blogData.contentMarkdown || '',
+                    contentMarkdown: blogData.content || '',
                     summary: blogData.summary || '',
                     authorId: blogData.authorId?._id || blogData.authorId || '',
                     tags: blogData.tags || [],
-                    images: blogData.images?.map(img => ({ ...img, file: null })) || [],
-                    video: blogData.video ? { ...blogData.video, file: null } : null,
+                    images: blogData.images?.map(img => ({ ...img, file: null, caption: img.caption || '' })) || [],
+                    video: blogData.video ? { ...blogData.video, file: null, caption: blogData.video.caption || '' } : null,
                     affiliateLinks: blogData.affiliateLinks || [],
                     status: blogData.status || 'inactive',
                 };
@@ -87,8 +91,6 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
             initialFormDataRef.current = null;
         }
     }, [blogData, open]);
-
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -101,10 +103,10 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
     const handleImageChange = (e) => {
         if (e.target.files?.length) {
             const newFiles = Array.from(e.target.files).map(file => ({
-                file,
+                file, // File object thực tế
                 caption: '',
-                url: URL.createObjectURL(file),
-                public_id: null
+                url: URL.createObjectURL(file), // URL tạm thời để preview
+                public_id: null // Chưa có public_id vì chưa upload
             }));
             setFormData(prev => ({ ...prev, images: [...prev.images, ...newFiles] }));
         }
@@ -112,7 +114,7 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
 
     const removeImage = (indexToRemove) => {
         const imageToRemove = formData.images[indexToRemove];
-        if (imageToRemove.url && imageToRemove.file) {
+        if (imageToRemove.url && imageToRemove.file) { // Chỉ revoke nếu là URL tạm thời từ file
             URL.revokeObjectURL(imageToRemove.url);
         }
         setFormData(prev => ({
@@ -213,7 +215,6 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
         setFormData(prev => ({ ...prev, video: null }));
     };
 
-    const handleTagsChange = (event, newValue) => setFormData(prev => ({ ...prev, tags: newValue }));
     const handleAddAffiliateLink = () => setFormData(prev => ({ ...prev, affiliateLinks: [...prev.affiliateLinks, { label: '', url: '' }] }));
     const removeAffiliateLink = (index) => setFormData(prev => ({ ...prev, affiliateLinks: prev.affiliateLinks.filter((_, i) => i !== index) }));
     const handleAffiliateLinkChange = (index, field, value) => setFormData(prev => ({ ...prev, affiliateLinks: prev.affiliateLinks.map((link, i) => i === index ? { ...link, [field]: value } : link) }));
@@ -234,7 +235,17 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
             data.append('content', formData.contentMarkdown);
             data.append('summary', formData.summary);
             data.append('status', formData.status);
-            data.append('tags', formData.tags.join(','));
+            const trimmedTags = formData.tags.trim();
+            if (trimmedTags.length > 0) {
+                const filteredTags = trimmedTags
+                    .split(',')
+                    .map(tag => tag.trim())
+                    .filter(tag => tag.length > 0)
+                    .join(',');
+                if (filteredTags.length > 0) {
+                    data.append('tags', filteredTags);
+                }
+            }
             data.append('affiliateLinks', JSON.stringify(formData.affiliateLinks));
             const headings = generateHeadings(formData.contentMarkdown);
             data.append('headings', JSON.stringify(headings));
@@ -271,10 +282,10 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
 
 
             if (blogData?._id) {
-                await axios.put(`blog/update/${blogData._id}`, data);
+                await axiosInstance.put(`blog/update/${blogData._id}`, data);
                 toast.success('Cập nhật bài viết thành công!');
             } else {
-                await axios.post('blog/create', data);
+                await axiosInstance.post('admin/blog/create', data);
                 toast.success('Tạo bài viết mới thành công!');
             }
             onSaveSuccess();
@@ -327,9 +338,15 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
                                     <Paper variant="outlined" sx={{ p: 3, borderRadius: '12px' }}>
                                         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>Thông tin cơ bản</Typography>
                                         <TextField label="Tóm tắt (Meta Description)" name="summary" value={formData.summary} onChange={handleChange} fullWidth multiline rows={4} variant="outlined" size="medium" sx={{ mb: 3 }} />
-                                        <Autocomplete multiple options={[]} value={formData.tags} onChange={handleTagsChange} freeSolo size="medium"
-                                            renderTags={(value, getTagProps) => value.map((option, index) => (<Chip variant="outlined" label={option} size="medium" {...getTagProps({ index })} />))}
-                                            renderInput={(params) => (<TextField {...params} variant="outlined" label="Tags" placeholder="Thêm tags..." />)}
+                                        <TextField
+                                            label="Tags"
+                                            name="tags"
+                                            value={formData.tags}
+                                            onChange={handleChange}
+                                            fullWidth
+                                            variant="outlined"
+                                            size="small"
+                                            placeholder="Nhập tags, phân tách bằng dấu phẩy (ví dụ: tag1,tag2)"
                                         />
                                         <Box sx={{ mt: 3 }}>
                                             <Typography variant="subtitle1" sx={{ color: 'text.secondary', mb: 1 }}>Trạng thái</Typography>
