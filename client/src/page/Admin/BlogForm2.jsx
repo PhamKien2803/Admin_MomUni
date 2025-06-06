@@ -285,7 +285,7 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
                 await axiosInstance.put(`blog/update/${blogData._id}`, data);
                 toast.success('Cập nhật bài viết thành công!');
             } else {
-                await axiosInstance.post('admin/blog/create', data);
+                await axiosInstance.post('blog/create', data);
                 toast.success('Tạo bài viết mới thành công!');
             }
             onSaveSuccess();
