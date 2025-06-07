@@ -3,7 +3,7 @@ const slugify = require("slugify");
 const Blogs = require("../shared/model/blogs.model");
 const Analytics = require("../shared/model/analytics.model")
 const connectDB = require('../shared/mongoose');
-const { cloudinary } = require('../shared/middleware/upload.middleware');
+const { cloudinary, uploadBufferToCloudinary } = require('../shared/middleware/upload.middleware');
 
 
 app.http('createBlog', {
@@ -348,6 +348,7 @@ app.http('uploaderBlogImagesToCloud', {
         context.log('HTTP trigger function processed a request: uploaderBlogImagesToCloud.');
 
         try {
+            await connectDB();
             const formData = await request.formData();
             const files = formData.getAll('images');
             if (!files || files.length === 0) {
@@ -361,7 +362,7 @@ app.http('uploaderBlogImagesToCloud', {
                 files.map(async (file) => {
                     const arrayBuffer = await file.arrayBuffer();
                     const buffer = Buffer.from(arrayBuffer);
-                    const result = await uploadToCloudinary(buffer);
+                    const result = await uploadBufferToCloudinary(buffer);
                     return {
                         url: result.secure_url,
                         public_id: result.public_id,

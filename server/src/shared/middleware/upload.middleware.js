@@ -30,4 +30,28 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-module.exports = { upload, cloudinary };
+
+/**
+ * @param {Buffer} buffer 
+ * @param {'image' | 'video'} resource_type
+ * @returns {Promise<object>} 
+ */
+const uploadBufferToCloudinary = async (buffer, resource_type = 'image') => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: resource_type === 'image' ? 'blogs/images' : 'blogs/videos',
+                resource_type,
+                transformation: resource_type === 'image' ? [{ width: 1000, crop: 'limit' }] : undefined
+            },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+
+        stream.end(buffer);
+    });
+};
+
+module.exports = { upload, cloudinary, uploadBufferToCloudinary };

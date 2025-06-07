@@ -139,7 +139,7 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
     const uploadImageToServer = async (file) => {
         const form = new FormData();
         form.append('images', file);
-        const { data } = await axios.post('blog/upload-images', form);
+        const { data } = await axios.post('upload-images', form);
         return data.images?.[0];
     };
 
