@@ -296,6 +296,7 @@ app.http('getBlog', {
 });
 
 
+
 app.http('updateBlogStatus', {
     methods: ['PUT'],
     authLevel: 'anonymous',
@@ -330,6 +331,59 @@ app.http('updateBlogStatus', {
         } catch (error) {
             context.log('Error updating blog status:', error);
             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
+        }
+    }
+});
+
+/**
+ * @param {Buffer} buffer 
+ * @returns {Promise<object>} 
+ */
+
+app.http('uploaderBlogImagesToCloud', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'upload-images',
+    handler: async (request, context) => {
+        context.log('HTTP trigger function processed a request: uploaderBlogImagesToCloud.');
+
+        try {
+            const formData = await request.formData();
+            const files = formData.getAll('images');
+            if (!files || files.length === 0) {
+                return {
+                    status: 400,
+                    jsonBody: { message: 'Không có tệp hình ảnh nào được gửi.' }
+                };
+            }
+
+            const uploadedImages = await Promise.all(
+                files.map(async (file) => {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
+                    const result = await uploadToCloudinary(buffer);
+                    return {
+                        url: result.secure_url,
+                        public_id: result.public_id,
+                    };
+                })
+            );
+            return {
+                status: 200,
+                jsonBody: {
+                    message: 'Tải lên hình ảnh thành công',
+                    images: uploadedImages,
+                }
+            };
+        } catch (error) {
+            context.log('Lỗi khi tải lên hình ảnh:', error);
+            return {
+                status: 500,
+                jsonBody: {
+                    message: 'Lỗi máy chủ nội bộ',
+                    error: error.message,
+                }
+            };
         }
     }
 });

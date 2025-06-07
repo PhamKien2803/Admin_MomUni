@@ -225,3 +225,38 @@ module.exports.updateBlogStatus = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server, vui lòng thử lại sau' });
     }
 };
+
+module.exports.uploaderBlogImagesToCloud = async (req, res) => {
+    try {
+        const files = req.files;
+        if (!files || files.length === 0) {
+            return res.status(400).json({ message: 'Không có tệp hình ảnh nào được gửi.' });
+        }
+
+        const uploadedImages = await Promise.all(
+            files.map(async (file) => {
+                const result = await cloudinary.uploader.upload(file.path, {
+                    folder: 'blogs/images',
+                    resource_type: 'image',
+                    transformation: [{ width: 1000, crop: 'limit' }],
+                });
+
+                return {
+                    url: result.secure_url,
+                    public_id: result.public_id,
+                };
+            })
+        );
+
+        res.status(200).json({
+            message: 'Tải lên hình ảnh thành công',
+            images: uploadedImages,
+        });
+    } catch (error) {
+        console.error('Lỗi khi tải lên hình ảnh:', error);
+        res.status(500).json({
+            message: 'Lỗi máy chủ nội bộ',
+            error: error.message,
+        });
+    }
+};

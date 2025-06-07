@@ -16,7 +16,7 @@ import MDEditor from '@uiw/react-md-editor';
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
 import slugify from 'slugify';
-import axiosInstance from './../../helper/axiosInstance';
+import axios from 'axios';
 
 // --- TIỆN ÍCH ---
 
@@ -91,6 +91,7 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
             initialFormDataRef.current = null;
         }
     }, [blogData, open]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -100,21 +101,141 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
         setFormData(prev => ({ ...prev, contentMarkdown: value }));
     };
 
-    const handleImageChange = (e) => {
-        if (e.target.files?.length) {
-            const newFiles = Array.from(e.target.files).map(file => ({
-                file, // File object thực tế
+    // Logic cũ: add link blob
+    // const handleImageChange = (e) => {
+    //     if (e.target.files?.length) {
+    //         const newFiles = Array.from(e.target.files).map(file => ({
+    //             file,
+    //             caption: '',
+    //             url: URL.createObjectURL(file),
+    //             public_id: null
+    //         }));
+    //         setFormData(prev => ({ ...prev, images: [...prev.images, ...newFiles] }));
+    //     }
+    // };
+
+    // Logic mới 1: add link blob và chèn vào editor và đợi tải lên => replace link blob bằng link cloud
+    const insertImageWithCloudUrl = async (imageObj, editorRef, formData, setFormData, handleContentChange) => {
+        const markdownToInsert = `![${imageObj.caption || 'image'}](${imageObj.url})\n`;
+        const currentContent = formData.contentMarkdown || '';
+        const textarea = editorRef?.current?.textarea;
+        let newContent;
+
+        if (textarea) {
+            const cursorPosition = textarea.selectionStart;
+            newContent = currentContent.slice(0, cursorPosition) + markdownToInsert + currentContent.slice(cursorPosition);
+            setTimeout(() => {
+                const newCursor = cursorPosition + markdownToInsert.length;
+                textarea.focus();
+                textarea.setSelectionRange(newCursor, newCursor);
+            }, 0);
+        } else {
+            newContent = currentContent + markdownToInsert;
+        }
+
+        handleContentChange(newContent);
+    };
+
+    const uploadImageToServer = async (file) => {
+        const form = new FormData();
+        form.append('images', file);
+        const { data } = await axios.post('blog/upload-images', form);
+        return data.images?.[0];
+    };
+
+    const handleImageChange = async (e) => {
+        if (!e.target.files?.length) return;
+
+        for (const file of Array.from(e.target.files)) {
+            const tempUrl = URL.createObjectURL(file);
+            const tempImageObj = {
+                file,
                 caption: '',
-                url: URL.createObjectURL(file), // URL tạm thời để preview
-                public_id: null // Chưa có public_id vì chưa upload
-            }));
-            setFormData(prev => ({ ...prev, images: [...prev.images, ...newFiles] }));
+                url: tempUrl,
+                public_id: null
+            };
+
+            setFormData(prev => ({ ...prev, images: [...prev.images, tempImageObj] }));
+            await insertImageWithCloudUrl(tempImageObj, editorRef, formData, setFormData, handleContentChange);
+
+            try {
+                const uploaded = await uploadImageToServer(file);
+
+                setFormData(prev => ({
+                    ...prev,
+                    images: prev.images.map(img =>
+                        img.url === tempUrl ? { ...img, url: uploaded.url, public_id: uploaded.public_id } : img
+                    ),
+                    contentMarkdown: prev.contentMarkdown.replace(tempUrl, uploaded.url)
+                }));
+            } catch (err) {
+                toast.error('Lỗi khi tải ảnh lên máy chủ.');
+            }
         }
     };
 
+    // Logic mới 2: upload ảnh lên tự replace link blob bằng link cloud
+    // const handleImageChange = async (e) => {
+    //     if (e.target.files?.length) {
+    //         const files = Array.from(e.target.files);
+
+    //         const previews = files.map(file => ({
+    //             file,
+    //             caption: '',
+    //             url: URL.createObjectURL(file),
+    //             public_id: null,
+    //             status: 'uploading'
+    //         }));
+
+    //         setFormData(prev => ({ ...prev, images: [...prev.images, ...previews] }));
+
+    //         const form = new FormData();
+    //         files.forEach(file => form.append('images', file));
+
+    //         try {
+    //             const res = await axios.post('blog/upload-images', form);
+    //             const uploaded = res.data.images;
+
+    //             setFormData(prev => {
+    //                 const updatedImages = prev.images.map((img) => {
+    //                     if (img.status === 'uploading' && uploaded.length > 0) {
+    //                         const cloud = uploaded.shift();
+    //                         return {
+    //                             ...img,
+    //                             url: cloud?.url || img.url,
+    //                             public_id: cloud?.public_id || null,
+    //                             status: 'done'
+    //                         };
+    //                     }
+    //                     return img;
+    //                 });
+
+    //                 let updatedMarkdown = prev.contentMarkdown;
+    //                 prev.images.forEach((img, i) => {
+    //                     if (img.status === 'uploading' && uploaded[i]) {
+    //                         updatedMarkdown = updatedMarkdown.replace(img.url, uploaded[i].url);
+    //                     }
+    //                 });
+
+    //                 return {
+    //                     ...prev,
+    //                     images: updatedImages,
+    //                     contentMarkdown: updatedMarkdown
+    //                 };
+    //             });
+    //         } catch (err) {
+    //             toast.error('Upload ảnh thất bại!');
+    //             console.error(err);
+    //         }
+    //     }
+    // };
+
+
+
+
     const removeImage = (indexToRemove) => {
         const imageToRemove = formData.images[indexToRemove];
-        if (imageToRemove.url && imageToRemove.file) { // Chỉ revoke nếu là URL tạm thời từ file
+        if (imageToRemove.url && imageToRemove.file) {
             URL.revokeObjectURL(imageToRemove.url);
         }
         setFormData(prev => ({
@@ -282,10 +403,10 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
 
 
             if (blogData?._id) {
-                await axiosInstance.put(`blog/update/${blogData._id}`, data);
+                await axios.put(`blog/update/${blogData._id}`, data);
                 toast.success('Cập nhật bài viết thành công!');
             } else {
-                await axiosInstance.post('blog/create', data);
+                await axios.post('blog/create', data);
                 toast.success('Tạo bài viết mới thành công!');
             }
             onSaveSuccess();
@@ -369,7 +490,9 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
                                         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>Thư viện ảnh</Typography>
                                         <Button variant="outlined" component="label" startIcon={<AddPhotoIcon />} size="medium" sx={{ textTransform: 'none', mb: 2 }}>
                                             Tải ảnh lên
-                                            <input type="file" hidden accept="image/*" onChange={handleImageChange} multiple />
+                                            {/* <input type="file" hidden accept="image/*" onChange={handleImageChange} multiple /> */}
+                                            <input type="file" hidden accept="image/*" onChange={(e) => handleImageChange(e)} multiple />
+
                                         </Button>
                                         <Grid container spacing={2}>
                                             {formData.images.map((img, index) => (
