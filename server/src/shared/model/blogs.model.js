@@ -18,6 +18,7 @@ const BlogsSchema = new mongoose.Schema({
         {
             label: String,
             url: String,
+            image: String,
             clickCount: { type: Number, default: 0 }
         }
     ],

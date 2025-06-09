@@ -41,9 +41,28 @@ app.http('createBlog', {
                 newBlogData.tags = [];
             }
 
+            // if (affiliateLinks && typeof affiliateLinks === 'string') {
+            //     try {
+            //         newBlogData.affiliateLinks = JSON.parse(affiliateLinks);
+            //     } catch (e) {
+            //         return { status: 400, jsonBody: { message: 'Định dạng JSON của affiliateLinks không hợp lệ.' } };
+            //     }
+            // } else {
+            //     newBlogData.affiliateLinks = [];
+            // }
+
             if (affiliateLinks && typeof affiliateLinks === 'string') {
                 try {
-                    newBlogData.affiliateLinks = JSON.parse(affiliateLinks);
+                    const parsed = JSON.parse(affiliateLinks);
+                    if (Array.isArray(parsed)) {
+                        newBlogData.affiliateLinks = parsed.map(link => ({
+                            label: link.label || '',
+                            url: link.url || '',
+                            image: link.image || ''
+                        }));
+                    } else {
+                        newBlogData.affiliateLinks = [];
+                    }
                 } catch (e) {
                     return { status: 400, jsonBody: { message: 'Định dạng JSON của affiliateLinks không hợp lệ.' } };
                 }
@@ -62,7 +81,7 @@ app.http('createBlog', {
             }
             const imageFiles = formData.getAll('newImages');
             const captions = formData.getAll('newImageCaptions');
-            newBlogData.images = []; // Khởi tạo mảng rỗng
+            newBlogData.images = [];
 
             if (imageFiles && imageFiles.length > 0 && imageFiles[0].size > 0) {
                 const uploadPromises = imageFiles.map(file => {
@@ -201,9 +220,31 @@ app.http('updateBlog', {
                 const tagsValue = formData.get('tags');
                 blog.tags = (typeof tagsValue === 'string' && tagsValue) ? tagsValue.split(',').map(tag => tag.trim()) : [];
             }
+            // if (formData.has('affiliateLinks')) {
+            //     blog.affiliateLinks = JSON.parse(formData.get('affiliateLinks'));
+            // }
+
             if (formData.has('affiliateLinks')) {
-                blog.affiliateLinks = JSON.parse(formData.get('affiliateLinks'));
+                const raw = formData.get('affiliateLinks');
+                try {
+                    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                    if (Array.isArray(parsed)) {
+                        blog.affiliateLinks = parsed.map(link => ({
+                            label: link.label || '',
+                            url: link.url || '',
+                            image: link.image || ''
+                        }));
+                    } else {
+                        blog.affiliateLinks = [];
+                    }
+                } catch (e) {
+                    return {
+                        status: 400,
+                        jsonBody: { message: 'Định dạng JSON của affiliateLinks không hợp lệ.' }
+                    };
+                }
             }
+
             const newImageFiles = formData.getAll('images');
             const captions = formData.getAll('captions');
 
@@ -383,6 +424,62 @@ app.http('uploaderBlogImagesToCloud', {
                 jsonBody: {
                     message: 'Lỗi máy chủ nội bộ',
                     error: error.message,
+                }
+            };
+        }
+    }
+});
+
+app.http('uploaderBlogVideoToCloud', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'upload-video',
+    handler: async (request, context) => {
+        context.log('HTTP trigger function processed a request: uploaderBlogVideoToCloud.');
+
+        try {
+            await connectDB();
+            const formData = await request.formData();
+            const file = formData.get('video');
+
+            if (!file || file.size === 0) {
+                return {
+                    status: 400,
+                    jsonBody: { message: 'Không có tệp video nào được gửi.' }
+                };
+            }
+
+            const arrayBuffer = await file.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            const result = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream(
+                    { resource_type: 'video', folder: 'blogs' },
+                    (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result);
+                    }
+                ).end(buffer);
+            });
+
+            return {
+                status: 200,
+                jsonBody: {
+                    message: 'Tải lên video thành công',
+                    video: {
+                        url: result.secure_url,
+                        public_id: result.public_id
+                    }
+                }
+            };
+
+        } catch (error) {
+            context.log('Lỗi khi tải lên video:', error);
+            return {
+                status: 500,
+                jsonBody: {
+                    message: 'Lỗi máy chủ nội bộ',
+                    error: error.message
                 }
             };
         }

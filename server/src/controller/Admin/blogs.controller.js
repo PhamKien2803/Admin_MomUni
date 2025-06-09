@@ -130,8 +130,23 @@ module.exports.updateBlog = async (req, res) => {
         if (headings) {
             blog.headings = JSON.parse(headings);
         }
-        if (affiliateLinks) {
-            blog.affiliateLinks = JSON.parse(affiliateLinks);
+        if (affiliateLinks && typeof affiliateLinks === 'string') {
+            try {
+                const parsedLinks = JSON.parse(affiliateLinks);
+                blog.affiliateLinks = parsedLinks.map(link => ({
+                    label: link.label,
+                    url: link.url,
+                    image: link.image
+                }));
+            } catch (e) {
+                return res.status(400).json({ message: 'Định dạng JSON của affiliateLinks không hợp lệ.' });
+            }
+        } else if (Array.isArray(affiliateLinks)) {
+            blog.affiliateLinks = affiliateLinks.map(link => ({
+                label: link.label,
+                url: link.url,
+                image: link.image
+            }));
         }
         let finalImages = [];
         const keptImages = existingImages ? JSON.parse(existingImages) : [];
