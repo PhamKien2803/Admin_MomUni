@@ -101,18 +101,7 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
         setFormData(prev => ({ ...prev, contentMarkdown: value }));
     };
 
-    // Logic cũ: add link blob
-    // const handleImageChange = (e) => {
-    //     if (e.target.files?.length) {
-    //         const newFiles = Array.from(e.target.files).map(file => ({
-    //             file,
-    //             caption: '',
-    //             url: URL.createObjectURL(file),
-    //             public_id: null
-    //         }));
-    //         setFormData(prev => ({ ...prev, images: [...prev.images, ...newFiles] }));
-    //     }
-    // };
+
 
     // Logic mới 1: add link blob và chèn vào editor và đợi tải lên => replace link blob bằng link cloud
     const insertImageWithCloudUrl = async (imageObj, editorRef, formData, setFormData, handleContentChange) => {
@@ -173,65 +162,6 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
             }
         }
     };
-
-    // Logic mới 2: upload ảnh lên tự replace link blob bằng link cloud
-    // const handleImageChange = async (e) => {
-    //     if (e.target.files?.length) {
-    //         const files = Array.from(e.target.files);
-
-    //         const previews = files.map(file => ({
-    //             file,
-    //             caption: '',
-    //             url: URL.createObjectURL(file),
-    //             public_id: null,
-    //             status: 'uploading'
-    //         }));
-
-    //         setFormData(prev => ({ ...prev, images: [...prev.images, ...previews] }));
-
-    //         const form = new FormData();
-    //         files.forEach(file => form.append('images', file));
-
-    //         try {
-    //             const res = await axios.post('blog/upload-images', form);
-    //             const uploaded = res.data.images;
-
-    //             setFormData(prev => {
-    //                 const updatedImages = prev.images.map((img) => {
-    //                     if (img.status === 'uploading' && uploaded.length > 0) {
-    //                         const cloud = uploaded.shift();
-    //                         return {
-    //                             ...img,
-    //                             url: cloud?.url || img.url,
-    //                             public_id: cloud?.public_id || null,
-    //                             status: 'done'
-    //                         };
-    //                     }
-    //                     return img;
-    //                 });
-
-    //                 let updatedMarkdown = prev.contentMarkdown;
-    //                 prev.images.forEach((img, i) => {
-    //                     if (img.status === 'uploading' && uploaded[i]) {
-    //                         updatedMarkdown = updatedMarkdown.replace(img.url, uploaded[i].url);
-    //                     }
-    //                 });
-
-    //                 return {
-    //                     ...prev,
-    //                     images: updatedImages,
-    //                     contentMarkdown: updatedMarkdown
-    //                 };
-    //             });
-    //         } catch (err) {
-    //             toast.error('Upload ảnh thất bại!');
-    //             console.error(err);
-    //         }
-    //     }
-    // };
-
-
-
 
     const removeImage = (indexToRemove) => {
         const imageToRemove = formData.images[indexToRemove];
@@ -358,14 +288,11 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
             data.append('status', formData.status);
             const trimmedTags = formData.tags.trim();
             if (trimmedTags.length > 0) {
-                const filteredTags = trimmedTags
+                const tagArray = trimmedTags
                     .split(',')
                     .map(tag => tag.trim())
-                    .filter(tag => tag.length > 0)
-                    .join(',');
-                if (filteredTags.length > 0) {
-                    data.append('tags', filteredTags);
-                }
+                    .filter(tag => tag.length > 0);
+                data.append('tags', JSON.stringify(tagArray));
             }
             data.append('affiliateLinks', JSON.stringify(formData.affiliateLinks));
             const headings = generateHeadings(formData.contentMarkdown);
@@ -565,6 +492,7 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
                                                     <Stack spacing={1.5}>
                                                         <TextField label="Tên sản phẩm" value={link.label} onChange={(e) => handleAffiliateLinkChange(index, 'label', e.target.value)} fullWidth variant="outlined" size="small" />
                                                         <TextField label="URL" value={link.url} onChange={(e) => handleAffiliateLinkChange(index, 'url', e.target.value)} fullWidth variant="outlined" size="small" />
+                                                        <TextField label="Ảnh SP (URL)" value={link.image} onChange={(e) => handleAffiliateLinkChange(index, 'image', e.target.value)} fullWidth variant="standard" size="small" />
                                                     </Stack>
                                                     <IconButton onClick={() => removeAffiliateLink(index)} color="error" size="small" sx={{ position: 'absolute', top: 8, right: 8 }}><DeleteIcon fontSize='small' /></IconButton>
                                                 </Paper>

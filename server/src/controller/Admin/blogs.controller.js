@@ -106,66 +106,76 @@ module.exports.deleteBlog = async (req, res) => {
 module.exports.updateBlog = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = await request.json();
-        const {
-            title,
-            content,
-            summary,
-            tags,
-            affiliateLinks,
-            captions
-        } = body;
-
         const blog = await Blogs.findById(id);
+
         if (!blog) {
-            return res.status(404).json({ message: 'Blog not found' });
+            return res.status(404).json({ message: "Không tìm thấy bài viết." });
         }
+        const {
+            title, content, summary, status, tags, affiliateLinks, headings,
+            existingImages,
+            existingVideo,
+            newImageCaptions,
+            newVideoCaption
+        } = req.body;
+        blog.title = title || blog.title;
+        blog.slug = slugify(blog.title, { lower: true, strict: true });
+        blog.content = content || blog.content;
+        blog.summary = summary || blog.summary;
+        blog.status = status || blog.status;
 
-        if (title) {
-            blog.title = title;
-            blog.slug = slugify(title, { lower: true, strict: true });
+        if (tags && typeof tags === 'string') {
+            blog.tags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
         }
-
-        if (content !== undefined) blog.content = content;
-        if (summary !== undefined) blog.summary = summary;
-        if (req.files) {
-
-            if (req.files?.['images']) {
-                if (blog.images && blog.images.length > 0) {
-                    for (const img of blog.images) {
-                        if (img.public_id) await cloudinary.uploader.destroy(img.public_id);
-                    }
-                }
-
-                blog.images = req.files['images'].map((file, index) => ({
-                    url: file.path,
-                    caption: Array.isArray(captions) ? captions[index] : '',
-                    public_id: file.filename
-                }));
+        if (headings) {
+            blog.headings = JSON.parse(headings);
+        }
+        if (affiliateLinks) {
+            blog.affiliateLinks = JSON.parse(affiliateLinks);
+        }
+        let finalImages = [];
+        const keptImages = existingImages ? JSON.parse(existingImages) : [];
+        finalImages = [...keptImages];
+        const keptImagePublicIds = new Set(keptImages.map(img => img.public_id));
+        const imagesToDelete = blog.images.filter(img => !keptImagePublicIds.has(img.public_id));
+        if (imagesToDelete.length > 0) {
+            const deletePromises = imagesToDelete.map(img => cloudinary.uploader.destroy(img.public_id));
+            await Promise.all(deletePromises);
+        }
+        if (req.files && req.files['newImages']) {
+            const captions = Array.isArray(newImageCaptions) ? newImageCaptions : (newImageCaptions ? [newImageCaptions] : []);
+            const newUploadedImages = req.files['newImages'].map((file, index) => ({
+                url: file.path,
+                public_id: file.filename,
+                caption: captions[index] || ''
+            }));
+            finalImages.push(...newUploadedImages);
+        }
+        blog.images = finalImages;
+        if (req.files && req.files['newVideo']) {
+            if (blog.video && blog.video.public_id) {
+                await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
             }
-
-            if (req.files?.['video'] && req.files['video'][0]) {
-                if (blog.video && blog.video.public_id) {
-                    await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
-                }
-
-                const videoFile = req.files['video'][0];
-                blog.video = {
-                    url: videoFile.path,
-                    caption: '',
-                    public_id: videoFile.filename
-                };
+            const videoFile = req.files['newVideo'][0];
+            blog.video = {
+                url: videoFile.path,
+                public_id: videoFile.filename,
+                caption: newVideoCaption || ''
+            };
+        }
+        else {
+            const keptVideo = existingVideo ? JSON.parse(existingVideo) : null;
+            if (!keptVideo && blog.video && blog.video.public_id) {
+                await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
+                blog.video = null;
             }
         }
 
-        if (tags !== undefined) {
-            blog.tags = Array.isArray(tags)
-                ? tags
-                : typeof tags === 'string'
-                    ? tags.split(',').map(tag => tag.trim())
-                    : [];
+        if (tags !== undefined && tags !== '') {
+            blog.tags = typeof tags === 'string' && tags
+                ? tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+                : Array.isArray(tags) ? tags : [];
         }
-
         if (affiliateLinks !== undefined) {
             blog.affiliateLinks = typeof affiliateLinks === 'string'
                 ? JSON.parse(affiliateLinks)
@@ -173,15 +183,24 @@ module.exports.updateBlog = async (req, res) => {
         }
 
         await blog.save();
-
+        const newAnalytics = new Analytics({
+            blogId: blog._id,
+            action: "update",
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+            timestamp: new Date()
+        });
+        await newAnalytics.save();
         res.status(200).json({
+
             code: 200,
-            message: "Update Blog Successfully"
+            message: "Update Blog Successfully",
+            blog
         });
 
     } catch (error) {
-        console.error('Error updating blog:', error);
-        res.status(500).json({ message: 'Internal server error', error });
+        console.error('Lỗi khi cập nhật bài viết:', error);
+        res.status(500).json({ message: 'Lỗi máy chủ nội bộ', error: error.message });
     }
 };
 
