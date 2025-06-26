@@ -3,6 +3,7 @@ const slugify = require("slugify");
 const Blogs = require("../shared/model/blogs.model");
 const Analytics = require("../shared/model/analytics.model")
 const connectDB = require('../shared/mongoose');
+const mongoose = require("mongoose");
 const { cloudinary, uploadBufferToCloudinary } = require('../shared/middleware/upload.middleware');
 
 
