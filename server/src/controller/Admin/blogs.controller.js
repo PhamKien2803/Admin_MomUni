@@ -2,7 +2,8 @@ const slugify = require("slugify");
 const Blogs = require("../../model/blogs.model");
 const { cloudinary } = require('../../middleware/upload.middleware');
 const Analytics = require("../../model/analytics.model");
-const { default: mongoose } = require("mongoose");
+const mongoose = require("mongoose");
+
 
 
 module.exports.createBlog = async (req, res) => {
