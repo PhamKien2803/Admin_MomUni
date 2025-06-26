@@ -20,6 +20,7 @@
     "async-exit-hook": "^2.0.1",
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
+    "botbuilder": "^4.17.0-blobs1",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -33,6 +34,7 @@
     "multer": "^1.4.5-lts.2",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.10.1",
+    "openai": "^5.3.0",
     "slugify": "^1.6.6",
     "validator": "^13.15.0"
   },

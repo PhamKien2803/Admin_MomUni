@@ -61,16 +61,123 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
     const isFormDirty = () => JSON.stringify(formData) !== JSON.stringify(initialFormDataRef.current);
 
 
+    // useEffect(() => {
+    //     if (open) {
+    //         let initialData;
+    //         if (blogData.tags) {
+    //             initialData = {
+    //                 title: blogData.title || '',
+    //                 contentMarkdown: blogData.content || '',
+    //                 summary: blogData.summary || '',
+    //                 authorId: blogData.authorId?._id || blogData.authorId || '',
+    //                 tags: tagsValue,
+    //                 images: blogData.images?.map(img => ({ ...img, file: null, caption: img.caption || '' })) || [],
+    //                 video: blogData.video ? { ...blogData.video, file: null, caption: blogData.video.caption || '' } : null,
+    //                 affiliateLinks: blogData.affiliateLinks || [],
+    //                 status: blogData.status || 'inactive',
+    //             };
+    //         } else {
+    //             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    //             initialData = { ...emptyBlog, authorId: currentUser?.id || 'ADMIN_ID_PLACEHOLDER' };
+    //         }
+    //         setFormData(initialData);
+    //         initialFormDataRef.current = JSON.parse(JSON.stringify(initialData));
+    //     } else {
+    //         formData.images.forEach(img => {
+    //             if (img.file && img.url) URL.revokeObjectURL(img.url);
+    //         });
+    //         if (formData.video?.file && formData.video?.url) URL.revokeObjectURL(formData.video.url);
+    //         setFormData(emptyBlog);
+    //         initialFormDataRef.current = null;
+    //     }
+    // }, [blogData, open]);
+
+    // useEffect(() => {
+    //     if (open) {
+    //         let initialData;
+    //         console.log(blogData);
+
+    //         if (blogData) {
+    //             let tagsValue = '';
+    //             if (blogData.tags) {
+    //                 if (Array.isArray(blogData.tags)) {
+    //                     tagsValue = blogData.tags.join(', ');
+    //                 } else if (typeof blogData.tags === 'string') {
+    //                     try {
+    //                         const parsedTags = JSON.parse(blogData.tags);
+    //                         if (Array.isArray(parsedTags)) {
+    //                             tagsValue = parsedTags.join(', ');
+    //                         } else {
+    //                             tagsValue = blogData.tags;
+    //                         }
+    //                     } catch (error) {
+    //                         tagsValue = blogData.tags;
+    //                     }
+    //                 }
+    //             }
+
+    //             initialData = {
+    //                 title: blogData.title || '',
+    //                 contentMarkdown: blogData.content || '',
+    //                 summary: blogData.summary || '',
+    //                 authorId: blogData.authorId?._id || blogData.authorId || '',
+    //                 tags: tagsValue,
+    //                 images: blogData.images?.map(img => ({ ...img, file: null, caption: img.caption || '' })) || [],
+    //                 video: blogData.video ? { ...blogData.video, file: null, caption: blogData.video.caption || '' } : null,
+    //                 affiliateLinks: blogData.affiliateLinks || [],
+    //                 status: blogData.status || 'inactive',
+    //             };
+    //         } else {
+    //             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    //             initialData = { ...emptyBlog, authorId: currentUser?.id || 'ADMIN_ID_PLACEHOLDER' };
+    //         }
+    //         setFormData(initialData);
+    //         initialFormDataRef.current = JSON.parse(JSON.stringify(initialData));
+    //     } else {
+    //         formData.images.forEach(img => {
+    //             if (img.file && img.url) URL.revokeObjectURL(img.url);
+    //         });
+    //         if (formData.video?.file && formData.video?.url) URL.revokeObjectURL(formData.video.url);
+    //         setFormData(emptyBlog);
+    //         initialFormDataRef.current = null;
+    //     }
+    // }, [blogData, open]);
+
     useEffect(() => {
         if (open) {
             let initialData;
+            console.log(blogData);
+
             if (blogData) {
+                // Handle tags: convert to comma-separated string
+                let tagsValue = '';
+                if (blogData.tags) {
+                    if (Array.isArray(blogData.tags)) {
+                        // If tags is an array, join it
+                        tagsValue = blogData.tags.join(', ');
+                    } else if (typeof blogData.tags === 'string') {
+                        try {
+                            // Try parsing if it's a stringified JSON array
+                            const parsedTags = JSON.parse(blogData.tags);
+                            if (Array.isArray(parsedTags)) {
+                                tagsValue = parsedTags.join(', ');
+                            } else {
+                                // If it's a plain string, use it directly
+                                tagsValue = blogData.tags;
+                            }
+                        } catch (error) {
+                            // If JSON parsing fails, treat as a comma-separated string
+                            tagsValue = blogData.tags;
+                        }
+                    }
+                }
+
                 initialData = {
                     title: blogData.title || '',
                     contentMarkdown: blogData.content || '',
                     summary: blogData.summary || '',
                     authorId: blogData.authorId?._id || blogData.authorId || '',
-                    tags: blogData.tags || [],
+                    tags: tagsValue,
                     images: blogData.images?.map(img => ({ ...img, file: null, caption: img.caption || '' })) || [],
                     video: blogData.video ? { ...blogData.video, file: null, caption: blogData.video.caption || '' } : null,
                     affiliateLinks: blogData.affiliateLinks || [],
@@ -91,6 +198,9 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
             initialFormDataRef.current = null;
         }
     }, [blogData, open]);
+
+
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -289,14 +399,6 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
             data.append('content', formData.contentMarkdown);
             data.append('summary', formData.summary);
             data.append('status', formData.status);
-            // const trimmedTags = formData.tags.trim();
-            // if (trimmedTags.length > 0) {
-            //     const tagArray = trimmedTags
-            //         .split(',')
-            //         .map(tag => tag.trim())
-            //         .filter(tag => tag.length > 0);
-            //     data.append('tags', JSON.stringify(tagArray));
-            // }
             if (typeof formData.tags === 'string') {
                 const tagArray = formData.tags
                     .split(',')
@@ -401,12 +503,12 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
                                         <TextField
                                             label="Tags"
                                             name="tags"
-                                            value={formData.tags}
+                                            value={typeof formData.tags === 'string' ? formData.tags : ''}
                                             onChange={handleChange}
                                             fullWidth
                                             variant="outlined"
                                             size="small"
-                                            placeholder="Nhập tags, phân tách bằng dấu phẩy (ví dụ: tag1,tag2)"
+                                            placeholder="Nhập tags, phân tách bằng dấu phẩy (ví dụ: mẹ, bé)"
                                         />
                                         <Box sx={{ mt: 3 }}>
                                             <Typography variant="subtitle1" sx={{ color: 'text.secondary', mb: 1 }}>Trạng thái</Typography>
