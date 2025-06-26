@@ -355,6 +355,121 @@ app.http('deleteBlog', {
 });
 
 
+// app.http('updateBlog', {
+//     methods: ['PUT'],
+//     authLevel: 'anonymous',
+//     route: 'blog/update/{id}',
+//     handler: async (request, context) => {
+//         context.log('HTTP trigger function processed a request: updateBlog.');
+//         try {
+//             await connectDB();
+//             const { id } = request.params;
+//             const formData = await request.formData();
+
+//             const blog = await Blogs.findById(id);
+//             if (!blog) {
+//                 return { status: 404, jsonBody: { message: 'Blog not found' } };
+//             }
+//             const title = formData.get('title');
+//             if (title) {
+//                 blog.title = title;
+//                 blog.slug = slugify(title, { lower: true, strict: true });
+//             }
+//             if (formData.has('content')) blog.content = formData.get('content');
+//             if (formData.has('summary')) blog.summary = formData.get('summary');
+//             if (formData.has('status')) blog.status = formData.get('status');
+
+//             if (formData.has('tags')) {
+//                 const tagsValue = formData.get('tags');
+//                 blog.tags = (typeof tagsValue === 'string' && tagsValue) ? tagsValue.split(',').map(tag => tag.trim()) : [];
+//             }
+//             // if (formData.has('affiliateLinks')) {
+//             //     blog.affiliateLinks = JSON.parse(formData.get('affiliateLinks'));
+//             // }
+
+//             if (formData.has('affiliateLinks')) {
+//                 const raw = formData.get('affiliateLinks');
+//                 try {
+//                     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+//                     if (Array.isArray(parsed)) {
+//                         blog.affiliateLinks = parsed.map(link => ({
+//                             label: link.label || '',
+//                             url: link.url || '',
+//                             image: link.image || ''
+//                         }));
+//                     } else {
+//                         blog.affiliateLinks = [];
+//                     }
+//                 } catch (e) {
+//                     return {
+//                         status: 400,
+//                         jsonBody: { message: 'Định dạng JSON của affiliateLinks không hợp lệ.' }
+//                     };
+//                 }
+//             }
+
+//             const newImageFiles = formData.getAll('images');
+//             const captions = formData.getAll('captions');
+
+//             if (newImageFiles && newImageFiles.length > 0 && newImageFiles[0].size > 0) {
+//                 if (blog.images && blog.images.length > 0) {
+//                     const deletePromises = blog.images.map(img =>
+//                         img.public_id ? cloudinary.uploader.destroy(img.public_id) : Promise.resolve()
+//                     );
+//                     await Promise.all(deletePromises);
+//                 }
+//                 const uploadPromises = newImageFiles.map(file => {
+//                     return new Promise(async (resolve, reject) => {
+//                         const buffer = Buffer.from(await file.arrayBuffer());
+//                         cloudinary.uploader.upload_stream({ folder: "blogs" }, (error, result) => {
+//                             if (error) return reject(error);
+//                             resolve(result);
+//                         }).end(buffer);
+//                     });
+//                 });
+//                 const uploadResults = await Promise.all(uploadPromises);
+//                 blog.images = uploadResults.map((result, index) => ({
+//                     url: result.secure_url,
+//                     public_id: result.public_id,
+//                     caption: captions[index] || ''
+//                 }));
+//             }
+//             const newVideoFile = formData.get('video');
+//             if (newVideoFile && newVideoFile.size > 0) {
+//                 if (blog.video && blog.video.public_id) {
+//                     await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
+//                 }
+//                 const videoUploadPromise = new Promise(async (resolve, reject) => {
+//                     const buffer = Buffer.from(await newVideoFile.arrayBuffer());
+//                     cloudinary.uploader.upload_stream({ resource_type: 'video', folder: "blogs" }, (error, result) => {
+//                         if (error) return reject(error);
+//                         resolve(result);
+//                     }).end(buffer);
+//                 });
+//                 const videoResult = await videoUploadPromise;
+//                 blog.video = {
+//                     url: videoResult.secure_url,
+//                     public_id: videoResult.public_id,
+//                     caption: formData.get('video_caption') || ''
+//                 };
+//             }
+
+//             await blog.save();
+//             return {
+//                 status: 200,
+//                 jsonBody: {
+//                     message: "Update Blog Successfully",
+//                     blog: blog.toObject()
+//                 }
+//             };
+
+//         } catch (error) {
+//             context.log('Error updating blog:', error);
+//             return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
+//         }
+//     }
+// });
+
 app.http('updateBlog', {
     methods: ['PUT'],
     authLevel: 'anonymous',
@@ -364,111 +479,176 @@ app.http('updateBlog', {
         try {
             await connectDB();
             const { id } = request.params;
-            const formData = await request.formData();
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return { status: 400, jsonBody: { message: 'ID bài viết không hợp lệ' } };
+            }
 
             const blog = await Blogs.findById(id);
             if (!blog) {
-                return { status: 404, jsonBody: { message: 'Blog not found' } };
+                return { status: 404, jsonBody: { message: 'Không tìm thấy bài viết.' } };
             }
+
+            const formData = await request.formData();
+
+            // Update cơ bản
             const title = formData.get('title');
             if (title) {
                 blog.title = title;
                 blog.slug = slugify(title, { lower: true, strict: true });
             }
+
             if (formData.has('content')) blog.content = formData.get('content');
             if (formData.has('summary')) blog.summary = formData.get('summary');
             if (formData.has('status')) blog.status = formData.get('status');
 
+            // Tags
             if (formData.has('tags')) {
-                const tagsValue = formData.get('tags');
-                blog.tags = (typeof tagsValue === 'string' && tagsValue) ? tagsValue.split(',').map(tag => tag.trim()) : [];
-            }
-            // if (formData.has('affiliateLinks')) {
-            //     blog.affiliateLinks = JSON.parse(formData.get('affiliateLinks'));
-            // }
-
-            if (formData.has('affiliateLinks')) {
-                const raw = formData.get('affiliateLinks');
+                const rawTags = formData.get('tags');
                 try {
-                    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                    if (Array.isArray(parsed)) {
-                        blog.affiliateLinks = parsed.map(link => ({
+                    let parsedTags = typeof rawTags === 'string' ? JSON.parse(rawTags) : [];
+                    if (!Array.isArray(parsedTags)) {
+                        return { status: 400, jsonBody: { message: 'Tags phải là mảng JSON' } };
+                    }
+                    blog.tags = parsedTags.map(tag => String(tag).trim()).filter(tag => tag.length > 0);
+                } catch (err) {
+                    return { status: 400, jsonBody: { message: 'Định dạng tags không hợp lệ' } };
+                }
+            }
+
+            // Affiliate Links
+            if (formData.has('affiliateLinks')) {
+                const rawLinks = formData.get('affiliateLinks');
+                try {
+                    const parsed = JSON.parse(rawLinks);
+                    blog.affiliateLinks = Array.isArray(parsed)
+                        ? parsed.map(link => ({
                             label: link.label || '',
                             url: link.url || '',
                             image: link.image || ''
-                        }));
-                    } else {
-                        blog.affiliateLinks = [];
-                    }
-                } catch (e) {
-                    return {
-                        status: 400,
-                        jsonBody: { message: 'Định dạng JSON của affiliateLinks không hợp lệ.' }
-                    };
+                        }))
+                        : [];
+                } catch (err) {
+                    return { status: 400, jsonBody: { message: 'Định dạng affiliateLinks không hợp lệ' } };
                 }
             }
 
-            const newImageFiles = formData.getAll('images');
-            const captions = formData.getAll('captions');
-
-            if (newImageFiles && newImageFiles.length > 0 && newImageFiles[0].size > 0) {
-                if (blog.images && blog.images.length > 0) {
-                    const deletePromises = blog.images.map(img =>
-                        img.public_id ? cloudinary.uploader.destroy(img.public_id) : Promise.resolve()
-                    );
-                    await Promise.all(deletePromises);
+            // Headings
+            if (formData.has('headings')) {
+                try {
+                    blog.headings = JSON.parse(formData.get('headings'));
+                } catch (err) {
+                    return { status: 400, jsonBody: { message: 'Định dạng headings không hợp lệ' } };
                 }
-                const uploadPromises = newImageFiles.map(file => {
-                    return new Promise(async (resolve, reject) => {
-                        const buffer = Buffer.from(await file.arrayBuffer());
-                        cloudinary.uploader.upload_stream({ folder: "blogs" }, (error, result) => {
-                            if (error) return reject(error);
-                            resolve(result);
-                        }).end(buffer);
+            }
+
+            // Handle images
+            let keptImages = [];
+            if (formData.has('existingImages')) {
+                try {
+                    keptImages = JSON.parse(formData.get('existingImages'));
+                } catch (err) {
+                    return { status: 400, jsonBody: { message: 'Định dạng existingImages không hợp lệ' } };
+                }
+            }
+
+            const keptPublicIds = new Set(keptImages.map(img => img.public_id));
+            const deletedImages = blog.images.filter(img => !keptPublicIds.has(img.public_id));
+            await Promise.all(deletedImages.map(img =>
+                img.public_id ? cloudinary.uploader.destroy(img.public_id) : Promise.resolve()
+            ));
+
+            const imageFiles = formData.getAll('newImages');
+            const captions = formData.getAll('newImageCaptions') || [];
+            let uploadedImages = [];
+
+            if (imageFiles.length > 0 && imageFiles[0].size > 0) {
+                const uploadPromises = imageFiles.map(async (file, index) => {
+                    const buffer = Buffer.from(await file.arrayBuffer());
+                    return new Promise((resolve, reject) => {
+                        cloudinary.uploader.upload_stream(
+                            { folder: 'blogs' },
+                            (err, result) => {
+                                if (err) return reject(err);
+                                resolve({
+                                    url: result.secure_url,
+                                    public_id: result.public_id,
+                                    caption: captions[index] || ''
+                                });
+                            }
+                        ).end(buffer);
                     });
                 });
-                const uploadResults = await Promise.all(uploadPromises);
-                blog.images = uploadResults.map((result, index) => ({
-                    url: result.secure_url,
-                    public_id: result.public_id,
-                    caption: captions[index] || ''
-                }));
+                uploadedImages = await Promise.all(uploadPromises);
             }
-            const newVideoFile = formData.get('video');
+
+            blog.images = [...keptImages, ...uploadedImages];
+
+            // Handle video
+            const existingVideoRaw = formData.get('existingVideo');
+            const newVideoFile = formData.get('newVideo');
+            const newVideoCaption = formData.get('newVideoCaption');
+
             if (newVideoFile && newVideoFile.size > 0) {
                 if (blog.video && blog.video.public_id) {
                     await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
                 }
-                const videoUploadPromise = new Promise(async (resolve, reject) => {
-                    const buffer = Buffer.from(await newVideoFile.arrayBuffer());
-                    cloudinary.uploader.upload_stream({ resource_type: 'video', folder: "blogs" }, (error, result) => {
-                        if (error) return reject(error);
-                        resolve(result);
-                    }).end(buffer);
+                const buffer = Buffer.from(await newVideoFile.arrayBuffer());
+                const videoResult = await new Promise((resolve, reject) => {
+                    cloudinary.uploader.upload_stream(
+                        { resource_type: 'video', folder: 'blogs' },
+                        (err, result) => {
+                            if (err) return reject(err);
+                            resolve(result);
+                        }
+                    ).end(buffer);
                 });
-                const videoResult = await videoUploadPromise;
                 blog.video = {
                     url: videoResult.secure_url,
                     public_id: videoResult.public_id,
-                    caption: formData.get('video_caption') || ''
+                    caption: newVideoCaption || ''
                 };
+            } else if (existingVideoRaw) {
+                try {
+                    blog.video = JSON.parse(existingVideoRaw);
+                } catch {
+                    return { status: 400, jsonBody: { message: 'Định dạng existingVideo không hợp lệ' } };
+                }
+            } else if (!existingVideoRaw && blog.video?.public_id) {
+                await cloudinary.uploader.destroy(blog.video.public_id, { resource_type: 'video' });
+                blog.video = null;
             }
 
             await blog.save();
+
+            await new Analytics({
+                blogId: blog._id,
+                action: 'update',
+                ip: request.headers.get('x-forwarded-for') || 'unknown',
+                userAgent: request.headers.get('user-agent') || 'unknown',
+                timestamp: new Date()
+            }).save();
+
             return {
                 status: 200,
                 jsonBody: {
-                    message: "Update Blog Successfully",
+                    message: "Cập nhật bài viết thành công!",
                     blog: blog.toObject()
                 }
             };
 
         } catch (error) {
             context.log('Error updating blog:', error);
-            return { status: 500, jsonBody: { message: 'Internal server error', error: error.message } };
+            return {
+                status: 500,
+                jsonBody: {
+                    message: 'Lỗi máy chủ nội bộ',
+                    error: error.message
+                }
+            };
         }
     }
 });
+
 
 
 app.http('getBlog', {
