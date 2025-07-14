@@ -70,6 +70,7 @@ const StatisticsPage = () => {
         totalBlogs: 0,
         totalViews: 0,
         totalVisitors: 0,
+        totalExpertForms: 0,
     });
     const [actionAnalytics, setActionAnalytics] = useState([]);
     const [loadingSummary, setLoadingSummary] = useState(false);
@@ -78,15 +79,17 @@ const StatisticsPage = () => {
     const fetchSummaryStats = useCallback(async () => {
         setLoadingSummary(true);
         try {
-            const [blogsRes, viewsRes, visitorsRes] = await Promise.all([
+            const [blogsRes, viewsRes, visitorsRes, expertFormsRes] = await Promise.all([
                 axios.get('analytic/total-blogs'),
                 axios.get('analytic/total-views'),
                 axios.get('analytic/total-visitors'),
+                axios.get('expert-form/count'),
             ]);
             setSummaryStats({
                 totalBlogs: blogsRes.data?.totalBlogs || 0,
                 totalViews: viewsRes.data?.totalViews || 0,
                 totalVisitors: visitorsRes.data?.totalVisitors || 0,
+                totalExpertForms: expertFormsRes.data?.totalForms || 0,
             });
         } catch (error) {
             console.error('Failed to fetch summary stats:', error);
@@ -158,14 +161,17 @@ const StatisticsPage = () => {
 
             {/* Summary Cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid item xs={12} sm={6} md={3}>
                     <StatCard title="Tổng số Bài viết" value={formatNumber(summaryStats.totalBlogs)} icon={<ArticleIcon />} loading={loadingSummary} color="info" />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid item xs={12} sm={6} md={3}>
                     <StatCard title="Tổng Lượt xem" value={formatNumber(summaryStats.totalViews)} icon={<VisibilityIcon />} loading={loadingSummary} color="success" />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid item xs={12} sm={6} md={3}>
                     <StatCard title="Tổng Khách truy cập" value={formatNumber(summaryStats.totalVisitors)} icon={<PeopleIcon />} loading={loadingSummary} color="warning" />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard title="Tổng số câu hỏi tư vấn" value={formatNumber(summaryStats.totalExpertForms)} icon={<TrendingUpIcon />} loading={loadingSummary} color="primary" />
                 </Grid>
             </Grid>
 

@@ -46,3 +46,28 @@ app.http('createExpertForm', {
         }
     }
 });
+
+app.http('countExpertForms', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'expert-form/count',
+    handler: async (request, context) => {
+        try {
+            await connectDB();
+            const totalForms = await ExpertForm.countDocuments();
+            return {
+                status: 200,
+                jsonBody: { totalForms }
+            };
+        } catch (error) {
+            context.log("Lỗi thống kê form:", error.message);
+            return {
+                status: 500,
+                jsonBody: {
+                    message: "Internal server error",
+                    error: error.message
+                }
+            };
+        }
+    }
+});
