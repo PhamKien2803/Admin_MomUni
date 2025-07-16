@@ -27,7 +27,7 @@ function App() {
             {routesAdmin.map(({ path, component: Component }) => (
               <Route
                 key={path}
-                path={path.replace("/admin-dashboard/", "")} // 👉 Chuyển route con thành relative path
+                path={path.replace("/admin-dashboard/", "")}
                 element={<Component />}
               />
             ))}

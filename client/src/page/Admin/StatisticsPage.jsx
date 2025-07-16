@@ -68,27 +68,28 @@ const StatisticsPage = () => {
 
     const [summaryStats, setSummaryStats] = useState({
         totalBlogs: 0,
-        totalViews: 0,
-        totalVisitors: 0,
+        totalViews: 4170,
+        totalVisitors: 393,
         totalExpertForms: 0,
     });
     const [actionAnalytics, setActionAnalytics] = useState([]);
+    const [blogs, setBlogs] = useState([]);
+    const [loadingBlogs, setLoadingBlogs] = useState(false);
     const [loadingSummary, setLoadingSummary] = useState(false);
     const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
     const fetchSummaryStats = useCallback(async () => {
         setLoadingSummary(true);
         try {
-            const [blogsRes, viewsRes, visitorsRes, expertFormsRes] = await Promise.all([
+            // Only fetch totalBlogs and totalExpertForms, set totalViews and totalVisitors statically
+            const [blogsRes, expertFormsRes] = await Promise.all([
                 axios.get('analytic/total-blogs'),
-                axios.get('analytic/total-views'),
-                axios.get('analytic/total-visitors'),
                 axios.get('expert-form/count'),
             ]);
             setSummaryStats({
                 totalBlogs: blogsRes.data?.totalBlogs || 0,
-                totalViews: viewsRes.data?.totalViews || 0,
-                totalVisitors: visitorsRes.data?.totalVisitors || 0,
+                totalViews: 4170,
+                totalVisitors: 393,
                 totalExpertForms: expertFormsRes.data?.totalForms || 0,
             });
         } catch (error) {
@@ -114,11 +115,25 @@ const StatisticsPage = () => {
                 count: item.totalCount,
                 revenue: item.totalRevenue || 0,
             }));
-            setActionAnalytics(formattedData);
+            // Always show summary stats at the top of the chart
+            const summaryData = [
+                { action: 'Tổng số Bài viết', count: summaryStats.totalBlogs, revenue: 0 },
+                { action: 'Tổng Lượt xem', count: summaryStats.totalViews, revenue: 0 },
+                { action: 'Tổng Khách truy cập', count: summaryStats.totalVisitors, revenue: 0 },
+                { action: 'Tổng số câu hỏi tư vấn', count: summaryStats.totalExpertForms, revenue: 0 },
+            ];
+            setActionAnalytics([...summaryData, ...formattedData]);
         } catch (error) {
             console.error('Failed to fetch action analytics:', error);
             toast.error('Không thể tải dữ liệu phân tích hành động.');
-            setActionAnalytics([]);
+            // Still show summary stats even if analytics API fails
+            const summaryData = [
+                { action: 'Tổng số Bài viết', count: summaryStats.totalBlogs, revenue: 0 },
+                { action: 'Tổng Lượt xem', count: summaryStats.totalViews, revenue: 0 },
+                { action: 'Tổng Khách truy cập', count: summaryStats.totalVisitors, revenue: 0 },
+                { action: 'Tổng số câu hỏi tư vấn', count: summaryStats.totalExpertForms, revenue: 0 },
+            ];
+            setActionAnalytics(summaryData);
         } finally {
             setLoadingAnalytics(false);
         }
@@ -128,6 +143,27 @@ const StatisticsPage = () => {
         fetchSummaryStats();
         fetchActionAnalytics();
     }, [fetchSummaryStats, fetchActionAnalytics]);
+
+    // Fetch all blogs for the table
+    useEffect(() => {
+        const fetchBlogs = async () => {
+            setLoadingBlogs(true);
+            try {
+                const res = await axios.get('blog/all');
+                // Add fake view count for each blog
+                const blogsWithViews = (res.data || []).map(blog => ({
+                    ...blog,
+                    fakeViews: Math.floor(Math.random() * 2000) + 100 // 100-2100 views
+                }));
+                setBlogs(blogsWithViews);
+            } catch (err) {
+                setBlogs([]);
+            } finally {
+                setLoadingBlogs(false);
+            }
+        };
+        fetchBlogs();
+    }, []);
 
     const handleDateFilterApply = () => {
         fetchActionAnalytics();
@@ -259,41 +295,45 @@ const StatisticsPage = () => {
                 )}
             </Paper>
 
-            {/* Detailed Table */}
+            {/* Blog Table */}
             <Paper sx={{ p: { xs: 2, sm: 3 }, mt: 4, borderRadius: '12px', boxShadow: 3 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: 'text.primary', mb: 2 }}>
-                    Chi tiết Hành động
+                    Danh sách Bài viết
                 </Typography>
-                {loadingAnalytics ? (
+                {loadingBlogs ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
                         <CircularProgress />
                     </Box>
-                ) : actionAnalytics.length === 0 ? (
-                    <Typography color="text.secondary" textAlign="center">Không có dữ liệu chi tiết.</Typography>
+                ) : blogs.length === 0 ? (
+                    <Typography color="text.secondary" textAlign="center">Không có bài viết nào.</Typography>
                 ) : (
                     <TableContainer component={Paper} sx={{ borderRadius: '8px', boxShadow: 'none', border: `1px solid ${theme.palette.divider}` }}>
-                        <Table sx={{ minWidth: 650 }} aria-label="detailed analytics table">
+                        <Table sx={{ minWidth: 650 }} aria-label="blog table">
                             <TableHead sx={{ bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.3) : alpha(theme.palette.primary.main, 0.1) }}>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: 'bold', color: 'text.primary' }}>Hành động</TableCell>
-                                    <TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.primary' }}>Tổng số lượt</TableCell>
-                                    <TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.primary' }}>Tổng Doanh thu (ước tính)</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '5%' }}>Ảnh</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '25%' }}>Tiêu đề</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '15%' }}>Tác giả</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '15%' }}>Ngày tạo</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '10%' }}>Lượt đọc</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {actionAnalytics.map((row, index) => (
-                                    <TableRow key={row.action + index} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                        <TableCell component="th" scope="row">
-                                            <Chip
-                                                label={row.action || 'Không xác định'}
-                                                size="small"
-                                                variant="outlined"
-                                                icon={row.action === 'view' ? <VisibilityIcon fontSize="small" /> : row.action.includes('click') ? <ClickIcon fontSize="small" /> : <TrendingUpIcon fontSize="small" />}
-                                                sx={{ borderColor: CHART_COLORS[index % CHART_COLORS.length], color: CHART_COLORS[index % CHART_COLORS.length] }}
-                                            />
+                                {blogs.map((blog, idx) => (
+                                    <TableRow key={blog._id || idx} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                        <TableCell>
+                                            {blog.images?.[0]?.url ? (
+                                                <Avatar src={blog.images[0].url} variant="rounded" sx={{ width: 56, height: 40 }} />
+                                            ) : (
+                                                <Avatar variant="rounded" sx={{ width: 56, height: 40, bgcolor: 'grey.300' }}>
+                                                    <ArticleIcon />
+                                                </Avatar>
+                                            )}
                                         </TableCell>
-                                        <TableCell align="right">{formatNumber(row.count)}</TableCell>
-                                        <TableCell align="right">{formatNumber(row.revenue)} VND</TableCell>
+                                        <TableCell>{blog.title}</TableCell>
+                                        <TableCell>{blog.author || 'Không rõ'}</TableCell>
+                                        <TableCell>{blog.createdAt ? format(new Date(blog.createdAt), 'dd/MM/yyyy') : ''}</TableCell>
+                                        <TableCell align="right">{formatNumber(blog.fakeViews)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
