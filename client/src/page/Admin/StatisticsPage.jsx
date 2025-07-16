@@ -64,8 +64,8 @@ const StatisticsPage = () => {
 
     const [summaryStats, setSummaryStats] = useState({
         totalBlogs: 0,
-        totalViews: 4170,
-        totalVisitors: 393,
+        totalViews: 13868,
+        totalVisitors: 1468,
         totalExpertForms: 0,
     });
     const [actionAnalytics, setActionAnalytics] = useState([]);
