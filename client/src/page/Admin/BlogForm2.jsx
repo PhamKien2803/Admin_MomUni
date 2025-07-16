@@ -60,113 +60,25 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
 
     const isFormDirty = () => JSON.stringify(formData) !== JSON.stringify(initialFormDataRef.current);
 
-
-    // useEffect(() => {
-    //     if (open) {
-    //         let initialData;
-    //         if (blogData.tags) {
-    //             initialData = {
-    //                 title: blogData.title || '',
-    //                 contentMarkdown: blogData.content || '',
-    //                 summary: blogData.summary || '',
-    //                 authorId: blogData.authorId?._id || blogData.authorId || '',
-    //                 tags: tagsValue,
-    //                 images: blogData.images?.map(img => ({ ...img, file: null, caption: img.caption || '' })) || [],
-    //                 video: blogData.video ? { ...blogData.video, file: null, caption: blogData.video.caption || '' } : null,
-    //                 affiliateLinks: blogData.affiliateLinks || [],
-    //                 status: blogData.status || 'inactive',
-    //             };
-    //         } else {
-    //             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    //             initialData = { ...emptyBlog, authorId: currentUser?.id || 'ADMIN_ID_PLACEHOLDER' };
-    //         }
-    //         setFormData(initialData);
-    //         initialFormDataRef.current = JSON.parse(JSON.stringify(initialData));
-    //     } else {
-    //         formData.images.forEach(img => {
-    //             if (img.file && img.url) URL.revokeObjectURL(img.url);
-    //         });
-    //         if (formData.video?.file && formData.video?.url) URL.revokeObjectURL(formData.video.url);
-    //         setFormData(emptyBlog);
-    //         initialFormDataRef.current = null;
-    //     }
-    // }, [blogData, open]);
-
-    // useEffect(() => {
-    //     if (open) {
-    //         let initialData;
-    //         console.log(blogData);
-
-    //         if (blogData) {
-    //             let tagsValue = '';
-    //             if (blogData.tags) {
-    //                 if (Array.isArray(blogData.tags)) {
-    //                     tagsValue = blogData.tags.join(', ');
-    //                 } else if (typeof blogData.tags === 'string') {
-    //                     try {
-    //                         const parsedTags = JSON.parse(blogData.tags);
-    //                         if (Array.isArray(parsedTags)) {
-    //                             tagsValue = parsedTags.join(', ');
-    //                         } else {
-    //                             tagsValue = blogData.tags;
-    //                         }
-    //                     } catch (error) {
-    //                         tagsValue = blogData.tags;
-    //                     }
-    //                 }
-    //             }
-
-    //             initialData = {
-    //                 title: blogData.title || '',
-    //                 contentMarkdown: blogData.content || '',
-    //                 summary: blogData.summary || '',
-    //                 authorId: blogData.authorId?._id || blogData.authorId || '',
-    //                 tags: tagsValue,
-    //                 images: blogData.images?.map(img => ({ ...img, file: null, caption: img.caption || '' })) || [],
-    //                 video: blogData.video ? { ...blogData.video, file: null, caption: blogData.video.caption || '' } : null,
-    //                 affiliateLinks: blogData.affiliateLinks || [],
-    //                 status: blogData.status || 'inactive',
-    //             };
-    //         } else {
-    //             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    //             initialData = { ...emptyBlog, authorId: currentUser?.id || 'ADMIN_ID_PLACEHOLDER' };
-    //         }
-    //         setFormData(initialData);
-    //         initialFormDataRef.current = JSON.parse(JSON.stringify(initialData));
-    //     } else {
-    //         formData.images.forEach(img => {
-    //             if (img.file && img.url) URL.revokeObjectURL(img.url);
-    //         });
-    //         if (formData.video?.file && formData.video?.url) URL.revokeObjectURL(formData.video.url);
-    //         setFormData(emptyBlog);
-    //         initialFormDataRef.current = null;
-    //     }
-    // }, [blogData, open]);
-
     useEffect(() => {
         if (open) {
             let initialData;
             console.log(blogData);
 
             if (blogData) {
-                // Handle tags: convert to comma-separated string
                 let tagsValue = '';
                 if (blogData.tags) {
                     if (Array.isArray(blogData.tags)) {
-                        // If tags is an array, join it
                         tagsValue = blogData.tags.join(', ');
                     } else if (typeof blogData.tags === 'string') {
                         try {
-                            // Try parsing if it's a stringified JSON array
                             const parsedTags = JSON.parse(blogData.tags);
                             if (Array.isArray(parsedTags)) {
                                 tagsValue = parsedTags.join(', ');
                             } else {
-                                // If it's a plain string, use it directly
                                 tagsValue = blogData.tags;
                             }
                         } catch (error) {
-                            // If JSON parsing fails, treat as a comma-separated string
                             tagsValue = blogData.tags;
                         }
                     }
@@ -211,9 +123,6 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
         setFormData(prev => ({ ...prev, contentMarkdown: value }));
     };
 
-
-
-    // Logic mới 1: add link blob và chèn vào editor và đợi tải lên => replace link blob bằng link cloud
     const insertImageWithCloudUrl = async (imageObj, editorRef, formData, setFormData, handleContentChange) => {
         const markdownToInsert = `![${imageObj.caption || 'image'}](${imageObj.url})\n`;
         const currentContent = formData.contentMarkdown || '';
@@ -376,7 +285,6 @@ const BlogForm2 = ({ open, onClose, blogData, onSaveSuccess }) => {
         setFormData(prev => ({ ...prev, video: null }));
     };
 
-    // const handleAddAffiliateLink = () => setFormData(prev => ({ ...prev, affiliateLinks: [...prev.affiliateLinks, { label: '', url: '' }] }));
     const handleAddAffiliateLink = () => setFormData(prev => ({
         ...prev, affiliateLinks: [...prev.affiliateLinks, { label: '', url: '', image: '' }]
     }));

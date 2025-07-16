@@ -110,17 +110,21 @@ const StatisticsPage = () => {
             const response = await axios.get('/analytic', {
                 params: { startDate, endDate },
             });
-            const formattedData = response.data.map(item => ({
+            let formattedData = response.data.map(item => ({
                 action: item._id,
                 count: item.totalCount,
                 revenue: item.totalRevenue || 0,
             }));
+            // Remove any duplicate summary actions from API data
+            formattedData = formattedData.filter(item =>
+                item.action !== 'Tổng số Bài viết' && item.action !== 'Tổng số câu hỏi tư vấn'
+            );
             // Always show summary stats at the top of the chart
             const summaryData = [
                 { action: 'Tổng số Bài viết', count: summaryStats.totalBlogs, revenue: 0 },
+                { action: 'Tổng số câu hỏi tư vấn', count: summaryStats.totalExpertForms, revenue: 0 },
                 { action: 'Tổng Lượt xem', count: summaryStats.totalViews, revenue: 0 },
                 { action: 'Tổng Khách truy cập', count: summaryStats.totalVisitors, revenue: 0 },
-                { action: 'Tổng số câu hỏi tư vấn', count: summaryStats.totalExpertForms, revenue: 0 },
             ];
             setActionAnalytics([...summaryData, ...formattedData]);
         } catch (error) {
@@ -129,9 +133,9 @@ const StatisticsPage = () => {
             // Still show summary stats even if analytics API fails
             const summaryData = [
                 { action: 'Tổng số Bài viết', count: summaryStats.totalBlogs, revenue: 0 },
+                { action: 'Tổng số câu hỏi tư vấn', count: summaryStats.totalExpertForms, revenue: 0 },
                 { action: 'Tổng Lượt xem', count: summaryStats.totalViews, revenue: 0 },
                 { action: 'Tổng Khách truy cập', count: summaryStats.totalVisitors, revenue: 0 },
-                { action: 'Tổng số câu hỏi tư vấn', count: summaryStats.totalExpertForms, revenue: 0 },
             ];
             setActionAnalytics(summaryData);
         } finally {
@@ -150,12 +154,9 @@ const StatisticsPage = () => {
             setLoadingBlogs(true);
             try {
                 const res = await axios.get('blog/all');
-                // Add fake view count for each blog
-                const blogsWithViews = (res.data || []).map(blog => ({
-                    ...blog,
-                    fakeViews: Math.floor(Math.random() * 2000) + 100 // 100-2100 views
-                }));
-                setBlogs(blogsWithViews);
+                // If response is { code, blogs: [...] }
+                const blogArr = res.data.blogs || [];
+                setBlogs(blogArr);
             } catch (err) {
                 setBlogs([]);
             } finally {
@@ -333,7 +334,7 @@ const StatisticsPage = () => {
                                         <TableCell>{blog.title}</TableCell>
                                         <TableCell>{blog.author || 'Không rõ'}</TableCell>
                                         <TableCell>{blog.createdAt ? format(new Date(blog.createdAt), 'dd/MM/yyyy') : ''}</TableCell>
-                                        <TableCell align="right">{formatNumber(blog.fakeViews)}</TableCell>
+                                        <TableCell align="right">{formatNumber(blog.viewCount || 0)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
