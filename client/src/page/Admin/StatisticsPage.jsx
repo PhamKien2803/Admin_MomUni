@@ -6,10 +6,8 @@ import {
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import {
-    BarChart as BarChartIcon, PieChart as PieChartIcon, ShowChart as LineChartIcon,
-    CalendarMonth as CalendarIcon, Refresh as RefreshIcon,
-    Article as ArticleIcon, Visibility as VisibilityIcon, PeopleAlt as PeopleIcon,
-    TrendingUp as TrendingUpIcon, AttachMoney as RevenueIcon, AdsClick as ClickIcon,
+    BarChart as BarChartIcon, Article as ArticleIcon, Visibility as VisibilityIcon, PeopleAlt as PeopleIcon,
+    TrendingUp as TrendingUpIcon, CalendarMonth as CalendarIcon, Refresh as RefreshIcon,
     ErrorOutline as ErrorIcon,
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
@@ -66,8 +64,8 @@ const StatisticsPage = () => {
 
     const [summaryStats, setSummaryStats] = useState({
         totalBlogs: 0,
-        totalViews: 4170, // Static data as requested
-        totalVisitors: 393, // Static data as requested
+        totalViews: 4170,
+        totalVisitors: 393,
         totalExpertForms: 0,
     });
     const [actionAnalytics, setActionAnalytics] = useState([]);
@@ -154,9 +152,10 @@ const StatisticsPage = () => {
             try {
                 const res = await axios.get('blog/all');
                 let blogArr = res.data.blogs || [];
+                // Set viewCount to a random number between 200 and 300
                 blogArr = blogArr.map(blog => ({
                     ...blog,
-                    viewCount: Math.floor(Math.random() * 9000) + 1000
+                    viewCount: Math.floor(Math.random() * 101) + 200
                 }));
                 setBlogs(blogArr);
             } catch (err) {
@@ -175,9 +174,10 @@ const StatisticsPage = () => {
         .slice(0, 3)
         .map(blog => blog._id);
 
-    const sortedBlogsByDate = blogs
+    // Sort blogs by view count descending
+    const sortedBlogs = blogs
         .slice()
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
 
     const handleDateFilterApply = () => {
         fetchActionAnalytics();
@@ -201,9 +201,9 @@ const StatisticsPage = () => {
         if (rank === -1) return null;
 
         const colors = {
-            0: 'warning', // Gold for Top 1
-            1: 'info',    // Silver for Top 2
-            2: 'default'  // Bronze for Top 3
+            0: 'warning',
+            1: 'info',
+            2: 'default'
         };
         const styles = {
             2: { backgroundColor: '#cd7f32', color: 'white' }
@@ -298,7 +298,8 @@ const StatisticsPage = () => {
                             <BarChart data={actionAnalytics} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
                                 <XAxis dataKey="action" tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
-                                <YAxis tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
+                                {/* Set the Y-axis domain */}
+                                <YAxis domain={[0, 4500]} tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} />
                                 <RechartsTooltip
                                     contentStyle={{
                                         backgroundColor: alpha(theme.palette.background.paper, 0.9),
@@ -332,7 +333,7 @@ const StatisticsPage = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
                         <CircularProgress />
                     </Box>
-                ) : sortedBlogsByDate.length === 0 ? (
+                ) : sortedBlogs.length === 0 ? (
                     <Typography color="text.secondary" textAlign="center">Không có bài viết nào.</Typography>
                 ) : (
                     <TableContainer component={Paper} sx={{ borderRadius: '8px', boxShadow: 'none', border: `1px solid ${theme.palette.divider}` }}>
@@ -347,7 +348,7 @@ const StatisticsPage = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {sortedBlogsByDate.map((blog) => (
+                                {sortedBlogs.map((blog) => (
                                     <TableRow key={blog._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                         <TableCell>
                                             <Avatar src={blog.images?.[0]?.url} variant="rounded" sx={{ width: 56, height: 40, bgcolor: 'grey.300' }}>
@@ -362,7 +363,7 @@ const StatisticsPage = () => {
                                         </TableCell>
                                         <TableCell>{blog.author || 'MomUni team'}</TableCell>
                                         <TableCell>{blog.createdAt ? format(new Date(blog.createdAt), 'dd/MM/yyyy') : ''}</TableCell>
-                                        <TableCell align="center">{formatNumber(blog.viewCount || 0)}</TableCell>
+                                        <TableCell align="right">{formatNumber(blog.viewCount || 0)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
