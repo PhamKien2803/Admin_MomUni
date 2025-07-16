@@ -169,11 +169,12 @@ const StatisticsPage = () => {
         };
         fetchBlogs();
     }, []);
-    // Get top 3 blogs by viewCount
-    const topBlogs = blogs
-        .slice() // copy
-        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
-        .slice(0, 3);
+    // Sort blogs by viewCount (desc), then createdAt (desc)
+    const sortedBlogs = blogs.slice().sort((a, b) => {
+        const viewDiff = (b.viewCount || 0) - (a.viewCount || 0);
+        if (viewDiff !== 0) return viewDiff;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
 
     const handleDateFilterApply = () => {
         fetchActionAnalytics();
@@ -201,32 +202,6 @@ const StatisticsPage = () => {
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            {/* Top 1-2-3 Blogs Section */}
-            {topBlogs.length > 0 && (
-                <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: '12px', boxShadow: 3 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
-                        Top các bài viết có lượt đọc cao nhất
-                    </Typography>
-                    <Grid container spacing={2}>
-                        {topBlogs.map((blog, idx) => (
-                            <Grid item xs={12} sm={4} key={blog._id || idx}>
-                                <Card sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: '10px', boxShadow: 2, bgcolor: idx === 0 ? 'gold' : idx === 1 ? 'silver' : '#cd7f32' }}>
-                                    <Avatar src={blog.images?.[0]?.url} variant="rounded" sx={{ width: 56, height: 40, mr: 2 }}>
-                                        <ArticleIcon />
-                                    </Avatar>
-                                    <Box>
-                                        <Typography variant="subtitle1" fontWeight="bold" color={idx === 0 ? 'warning.main' : idx === 1 ? 'info.main' : 'secondary.main'}>
-                                            {`Top ${idx + 1}`}
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight="bold" noWrap>{blog.title}</Typography>
-                                        <Typography variant="body2" color="text.secondary">Lượt đọc: {formatNumber(blog.viewCount || 0)}</Typography>
-                                    </Box>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Paper>
-            )}
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main', mb: 3 }}>
                 Bảng Thống Kê
             </Typography>
@@ -340,7 +315,7 @@ const StatisticsPage = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
                         <CircularProgress />
                     </Box>
-                ) : blogs.length === 0 ? (
+                ) : sortedBlogs.length === 0 ? (
                     <Typography color="text.secondary" textAlign="center">Không có bài viết nào.</Typography>
                 ) : (
                     <TableContainer component={Paper} sx={{ borderRadius: '8px', boxShadow: 'none', border: `1px solid ${theme.palette.divider}` }}>
@@ -352,10 +327,11 @@ const StatisticsPage = () => {
                                     <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '15%' }}>Tác giả</TableCell>
                                     <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '15%' }}>Ngày tạo</TableCell>
                                     <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '10%' }}>Lượt đọc</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', width: '10%' }}>Top</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {blogs.map((blog, idx) => (
+                                {sortedBlogs.map((blog, idx) => (
                                     <TableRow key={blog._id || idx} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                         <TableCell>
                                             {blog.images?.[0]?.url ? (
@@ -370,6 +346,11 @@ const StatisticsPage = () => {
                                         <TableCell>{blog.author || 'MomUni team'}</TableCell>
                                         <TableCell>{blog.createdAt ? format(new Date(blog.createdAt), 'dd/MM/yyyy') : ''}</TableCell>
                                         <TableCell align="right">{formatNumber(blog.viewCount || 0)}</TableCell>
+                                        <TableCell align="center">
+                                            {idx === 0 && <Chip label="Top 1" color="warning" size="small" />}
+                                            {idx === 1 && <Chip label="Top 2" color="info" size="small" />}
+                                            {idx === 2 && <Chip label="Top 3" color="secondary" size="small" />}
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
