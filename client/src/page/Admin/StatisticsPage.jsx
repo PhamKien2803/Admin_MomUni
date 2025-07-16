@@ -154,8 +154,12 @@ const StatisticsPage = () => {
             setLoadingBlogs(true);
             try {
                 const res = await axios.get('blog/all');
-                // If response is { code, blogs: [...] }
-                const blogArr = res.data.blogs || [];
+                let blogArr = res.data.blogs || [];
+                // Randomize viewCount for demo purposes (between 1000 and 10000)
+                blogArr = blogArr.map(blog => ({
+                    ...blog,
+                    viewCount: Math.floor(Math.random() * 9000) + 1000
+                }));
                 setBlogs(blogArr);
             } catch (err) {
                 setBlogs([]);
@@ -165,6 +169,11 @@ const StatisticsPage = () => {
         };
         fetchBlogs();
     }, []);
+    // Get top 3 blogs by viewCount
+    const topBlogs = blogs
+        .slice() // copy
+        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+        .slice(0, 3);
 
     const handleDateFilterApply = () => {
         fetchActionAnalytics();
@@ -192,6 +201,32 @@ const StatisticsPage = () => {
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            {/* Top 1-2-3 Blogs Section */}
+            {topBlogs.length > 0 && (
+                <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: '12px', boxShadow: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
+                        Top các bài viết có lượt đọc cao nhất
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {topBlogs.map((blog, idx) => (
+                            <Grid item xs={12} sm={4} key={blog._id || idx}>
+                                <Card sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: '10px', boxShadow: 2, bgcolor: idx === 0 ? 'gold' : idx === 1 ? 'silver' : '#cd7f32' }}>
+                                    <Avatar src={blog.images?.[0]?.url} variant="rounded" sx={{ width: 56, height: 40, mr: 2 }}>
+                                        <ArticleIcon />
+                                    </Avatar>
+                                    <Box>
+                                        <Typography variant="subtitle1" fontWeight="bold" color={idx === 0 ? 'warning.main' : idx === 1 ? 'info.main' : 'secondary.main'}>
+                                            {`Top ${idx + 1}`}
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold" noWrap>{blog.title}</Typography>
+                                        <Typography variant="body2" color="text.secondary">Lượt đọc: {formatNumber(blog.viewCount || 0)}</Typography>
+                                    </Box>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Paper>
+            )}
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main', mb: 3 }}>
                 Bảng Thống Kê
             </Typography>
@@ -332,7 +367,7 @@ const StatisticsPage = () => {
                                             )}
                                         </TableCell>
                                         <TableCell>{blog.title}</TableCell>
-                                        <TableCell>{blog.author || 'Không rõ'}</TableCell>
+                                        <TableCell>{blog.author || 'MomUni team'}</TableCell>
                                         <TableCell>{blog.createdAt ? format(new Date(blog.createdAt), 'dd/MM/yyyy') : ''}</TableCell>
                                         <TableCell align="right">{formatNumber(blog.viewCount || 0)}</TableCell>
                                     </TableRow>
